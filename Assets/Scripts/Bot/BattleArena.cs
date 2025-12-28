@@ -31,10 +31,6 @@ public class BattleArena : MonoBehaviour
     public float balloonPopReward = 0.1f;
     public float balloonPopPenalty = -0.1f;
 
-    public bool enforceOutcomeSignForElo = true;
-    public float minWinnerFinalReward = 0.1f;
-    public float maxLoserFinalReward = -0.1f;
-
     [Header("Spawn Area")]
     [SerializeField] private float arenaHalfSize = 10f;
     [SerializeField] private float wallPadding = 0.5f;
@@ -111,13 +107,8 @@ public class BattleArena : MonoBehaviour
         if (matchIsEnding) return;
         matchIsEnding = true;
 
-        winner.AddReward(winReward);
-        loser.AddReward(loseReward);
-
-        if (enforceOutcomeSignForElo)
-        {
-            EnforceOutcomeSigns(winner, loser);
-        }
+        winner.SetReward(winReward);
+        loser.SetReward(loseReward);
 
         if (floorRenderer != null && winner.teamMaterial != null)
         {
@@ -140,17 +131,6 @@ public class BattleArena : MonoBehaviour
         agentGroup.EndGroupEpisode();
         ResetScene();
         StartCoroutine(ClearMatchEndingNextFrame());
-    }
-
-    void EnforceOutcomeSigns(BattleBotAgent winner, BattleBotAgent loser)
-    {
-        float winnerCum = winner.GetCumulativeReward();
-        if (winnerCum <= 0f)
-            winner.AddReward(minWinnerFinalReward - winnerCum);
-
-        float loserCum = loser.GetCumulativeReward();
-        if (loserCum >= 0f)
-            loser.AddReward(maxLoserFinalReward - loserCum);
     }
 
     IEnumerator FlashFloor(Material winnerMat)
