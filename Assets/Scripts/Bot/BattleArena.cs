@@ -2,23 +2,19 @@ using UnityEngine;
 using Unity.MLAgents;
 using System.Collections;
 
-/// <summary>
-/// Controls the 1v1 arena, applies rewards for pops/win/loss, and handles scene resets.
-/// Spawn/teleport logic is hardened against floor-penetration and overlap-induced tipping.
-/// </summary>
 public class BattleArena : MonoBehaviour
 {
     [Header("Agents")]
     public BattleBotAgent agentA;
     public BattleBotAgent agentB;
 
-    [Header("Arena Root (local space for spawns)")]
+    [Header("Arena Root")]
     [SerializeField] private Transform arenaRoot;
 
-    [Header("Floor (for safe spawn height)")]
-    [SerializeField] private Collider floorCollider; // assign your Floor collider here (recommended)
-    [SerializeField] private LayerMask floorMask = ~0; // fallback raycast mask
-    [SerializeField] private float spawnSkin = 0.02f;  // small lift above floor
+    [Header("Floor")]
+    [SerializeField] private Collider floorCollider;
+    [SerializeField] private LayerMask floorMask = ~0;
+    [SerializeField] private float spawnSkin = 0.02f;
 
     [Header("Arena Visuals")]
     public MeshRenderer floorRenderer;
@@ -55,12 +51,6 @@ public class BattleArena : MonoBehaviour
     [Tooltip("Extra margin added on top of (radiusA + radiusB).")]
     [SerializeField] private float separationMargin = 0.15f;
 
-    [Tooltip("After teleport, try to resolve small floor penetration by nudging up.")]
-    [SerializeField] private int verticalResolveTries = 8;
-
-    [Tooltip("Vertical nudge per resolve try.")]
-    [SerializeField] private float verticalResolveStep = 0.02f;
-
     private SimpleMultiAgentGroup agentGroup;
     private bool matchIsEnding = false;
     private int envStepCount = 0;
@@ -71,7 +61,6 @@ public class BattleArena : MonoBehaviour
     {
         if (arenaRoot == null) arenaRoot = transform;
 
-        // Best-effort auto-find the floor collider if not assigned.
         if (floorCollider == null && arenaRoot != null)
         {
             var floorT = arenaRoot.Find("Floor");
@@ -137,7 +126,6 @@ public class BattleArena : MonoBehaviour
 
         agentGroup.EndGroupEpisode();
         ResetScene();
-
         StartCoroutine(ClearMatchEndingNextFrame());
     }
 
@@ -154,7 +142,7 @@ public class BattleArena : MonoBehaviour
         StartCoroutine(ClearMatchEndingNextFrame());
     }
 
-    private void EnforceOutcomeSigns(BattleBotAgent winner, BattleBotAgent loser)
+    void EnforceOutcomeSigns(BattleBotAgent winner, BattleBotAgent loser)
     {
         float winnerCum = winner.GetCumulativeReward();
         if (winnerCum <= 0f)
@@ -167,11 +155,9 @@ public class BattleArena : MonoBehaviour
 
     IEnumerator FlashFloor(Material winnerMat)
     {
-        floorRenderer.material = winnerMat;
+        if (floorRenderer != null) floorRenderer.material = winnerMat;
         yield return new WaitForSeconds(winFlashDuration);
-
-        if (floorRenderer != null && defaultFloorMaterial != null)
-            floorRenderer.material = defaultFloorMaterial;
+        if (floorRenderer != null) floorRenderer.material = defaultFloorMaterial;
     }
 
     IEnumerator ClearMatchEndingNextFrame()
@@ -180,7 +166,7 @@ public class BattleArena : MonoBehaviour
         matchIsEnding = false;
     }
 
-    public void ResetScene()
+    void ResetScene()
     {
         envStepCount = 0;
 
@@ -190,10 +176,6 @@ public class BattleArena : MonoBehaviour
         PlaceAgentsNonOverlapping();
     }
 
-    // -------------------------
-    // Spawn / Teleport Utilities
-    // -------------------------
-
     Vector3 SampleSpawnLocal()
     {
         float spawnAreaFrac = Academy.Instance.EnvironmentParameters.GetWithDefault("spawn_area_frac", spawnAreaFracDefault);
@@ -202,7 +184,6 @@ public class BattleArena : MonoBehaviour
         float x = Random.Range(-limit, limit);
         float z = Random.Range(-limit, limit);
 
-        // y is set later using floor + collider size
         return new Vector3(x, 0f, z);
     }
 
@@ -228,7 +209,6 @@ public class BattleArena : MonoBehaviour
         var col = GetPrimaryNonTriggerCollider(a);
         if (col == null) return 0.5f;
 
-        // Use horizontal extents as radius estimate
         var e = col.bounds.extents;
         return Mathf.Max(e.x, e.z);
     }
@@ -245,7 +225,6 @@ public class BattleArena : MonoBehaviour
         if (floorCollider != null)
             return floorCollider.bounds.max.y;
 
-        // Fallback: raycast down from above arena
         float rayStartY = arenaRoot.position.y + 10f;
         var origin = new Vector3(worldXZ.x, rayStartY, worldXZ.z);
 
@@ -257,23 +236,21 @@ public class BattleArena : MonoBehaviour
 
     bool IsFreeWorld(Vector3 worldPos, float radius)
     {
-        // Use OverlapSphere so we can safely ignore our own agents even if they are in the mask.
         var hits = Physics.OverlapSphere(worldPos, radius, spawnBlockers, QueryTriggerInteraction.Ignore);
         foreach (var h in hits)
         {
             if (h == null) continue;
-
-            // Ignore our two agents' colliders (old positions shouldn't block spawn sampling)
             if (agentA != null && h.transform.IsChildOf(agentA.transform)) continue;
             if (agentB != null && h.transform.IsChildOf(agentB.transform)) continue;
-
             return false;
         }
         return true;
     }
 
-    Vector3 FindSpawnLocal(float selfRadius, Vector3? otherLocal, float requiredSeparation)
+    Vector3 FindSpawnLocal(BattleBotAgent self, float selfRadius, Vector3? otherLocal, float requiredSeparation)
     {
+        float halfH = Mathf.Max(0.05f, GetAgentHalfHeight(self));
+
         for (int t = 0; t < spawnTries; t++)
         {
             var p = SampleSpawnLocal();
@@ -281,10 +258,8 @@ public class BattleArena : MonoBehaviour
             if (otherLocal.HasValue && Vector3.Distance(p, otherLocal.Value) < requiredSeparation)
                 continue;
 
-            // Check blockers at the intended world position (with a safe y just above floor).
             var world = LocalToWorld(p);
             float floorTop = GetFloorTopYAtXZ(world);
-            float halfH = Mathf.Max(0.05f, GetAgentHalfHeight(selfRadius == GetAgentSpawnRadius(agentA) ? agentA : agentB)); // best-effort
             world.y = floorTop + halfH + spawnSkin;
 
             if (!IsFreeWorld(world, selfRadius))
@@ -293,9 +268,7 @@ public class BattleArena : MonoBehaviour
             return p;
         }
 
-        // fallback corners
-        if (!otherLocal.HasValue) return new Vector3(-arenaHalfSize + wallPadding, 0f, -arenaHalfSize + wallPadding);
-        return new Vector3(arenaHalfSize - wallPadding, 0f, arenaHalfSize - wallPadding);
+        return SampleSpawnLocal();
     }
 
     void PlaceAgentsNonOverlapping()
@@ -304,24 +277,22 @@ public class BattleArena : MonoBehaviour
         float rB = GetAgentSpawnRadius(agentB);
         float required = rA + rB + separationMargin;
 
-        var pALocal = FindSpawnLocal(rA, null, 0f);
-        var pBLocal = FindSpawnLocal(rB, pALocal, required);
+        var pALocal = FindSpawnLocal(agentA, rA, null, 0f);
+        var pBLocal = FindSpawnLocal(agentB, rB, pALocal, required);
 
-        TeleportAgent(agentA, LocalToWorld(pALocal), YawLocalToWorld(Random.Range(0, 360)), rA);
-        TeleportAgent(agentB, LocalToWorld(pBLocal), YawLocalToWorld(Random.Range(0, 360)), rB);
+        TeleportAgent(agentA, LocalToWorld(pALocal), YawLocalToWorld(Random.Range(0f, 360f)));
+        TeleportAgent(agentB, LocalToWorld(pBLocal), YawLocalToWorld(Random.Range(0f, 360f)));
 
         Physics.SyncTransforms();
     }
 
-    void TeleportAgent(BattleBotAgent a, Vector3 worldPos, Quaternion worldRot, float spawnRadius)
+    void TeleportAgent(BattleBotAgent a, Vector3 worldPos, Quaternion worldRot)
     {
         if (a == null) return;
 
-        // Force yaw-only rotation (no pitch/roll)
         float yaw = worldRot.eulerAngles.y;
         worldRot = Quaternion.Euler(0f, yaw, 0f);
 
-        // Safe y above floor using collider half-height
         float halfH = Mathf.Max(0.05f, GetAgentHalfHeight(a));
         float floorTop = GetFloorTopYAtXZ(worldPos);
         worldPos.y = floorTop + halfH + spawnSkin;
@@ -333,29 +304,10 @@ public class BattleArena : MonoBehaviour
             return;
         }
 
-        // Hard-teleport: avoid solver keeping old contacts and torques
-        rb.detectCollisions = false;
-        rb.isKinematic = true;
-
-        rb.position = worldPos;
-        rb.rotation = worldRot;
-
-        Physics.SyncTransforms();
-
-        // If we still overlap due to floor/edge, nudge upward a few times
-        for (int i = 0; i < verticalResolveTries; i++)
-        {
-            if (IsFreeWorld(rb.position, spawnRadius))
-                break;
-
-            rb.position += Vector3.up * verticalResolveStep;
-            Physics.SyncTransforms();
-        }
-
-        rb.isKinematic = false;
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
-        rb.detectCollisions = true;
+        rb.position = worldPos;
+        rb.rotation = worldRot;
         rb.WakeUp();
     }
 }

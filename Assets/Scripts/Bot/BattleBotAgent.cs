@@ -19,13 +19,6 @@ public class BattleBotAgent : Agent
     public float turnSpeed = 200f;
     public float acceleration = 50f;
 
-    [Header("Vertical Safety")]
-    public float maxVerticalSpeed = 5f;
-
-    [Header("Upright Safety")]
-    public bool snapUprightIfTilted = true;
-    public float tiltSnapDegrees = 2f;
-
     [Header("Boost Settings")]
     public float boostMultiplier = 2f;
     public float boostDuration = 2f;
@@ -34,25 +27,20 @@ public class BattleBotAgent : Agent
     [Header("Shaping Penalties (Capped)")]
     public float stepPenalty = -0.00005f;
     public float maxStepPenaltyPerEpisode = -0.2f;
-
     public float wallHitPenalty = -0.0001f;
     public float maxWallPenaltyPerEpisode = -0.05f;
 
-    // State Variables
     private Rigidbody rBody;
     private Color originalColor;
-    
-    // Physics/Input Caching
+
     private float m_MoveInput;
     private float m_TurnInput;
     private bool m_BoostInput;
 
-    // Boost Logic
     private bool isBoosting = false;
     private bool canBoost = true;
     private float m_BoostTimer = 0f;
 
-    // Reward Accumulators
     private float stepPenaltyAcc = 0f;
     private float wallPenaltyAcc = 0f;
 
@@ -74,9 +62,10 @@ public class BattleBotAgent : Agent
             return;
         }
 
-        rBody.constraints |= RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
-        rBody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-        rBody.interpolation = RigidbodyInterpolation.Interpolate;
+        rBody.useGravity = false;
+        rBody.constraints |= RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ | RigidbodyConstraints.FreezePositionY;
+        rBody.collisionDetectionMode = CollisionDetectionMode.Discrete;
+        rBody.interpolation = RigidbodyInterpolation.None;
     }
 
     public override void OnEpisodeBegin()
@@ -95,23 +84,21 @@ public class BattleBotAgent : Agent
             rBody.rotation = Quaternion.Euler(0f, yaw, 0f);
         }
 
-        // Reset Inputs
         m_MoveInput = 0f;
         m_TurnInput = 0f;
         m_BoostInput = false;
 
-        // Reset Boost
-        canBoost = true;
         isBoosting = false;
+        canBoost = true;
         m_BoostTimer = 0f;
 
-        // Reset Penalties
         stepPenaltyAcc = 0f;
         wallPenaltyAcc = 0f;
 
         if (bodyRenderer != null && teamMaterial != null)
         {
             bodyRenderer.material = teamMaterial;
+            bodyRenderer.material.color = originalColor;
         }
 
         if (myBalloons != null)
@@ -130,7 +117,6 @@ public class BattleBotAgent : Agent
 
         HandleBoostLogic();
         HandleMovementPhysics();
-        HandleUprightSnap();
     }
 
     private void HandleBoostLogic()
@@ -141,63 +127,43 @@ public class BattleBotAgent : Agent
         }
         else if (isBoosting)
         {
-            // Boost finished
             isBoosting = false;
             m_BoostTimer = boostCooldown;
             if (bodyRenderer != null) bodyRenderer.material.color = originalColor;
         }
         else if (!canBoost && m_BoostTimer <= 0f)
         {
-            // Cooldown finished
             canBoost = true;
         }
 
-        // Activate boost if requested
         if (m_BoostInput && canBoost)
         {
             isBoosting = true;
             canBoost = false;
             m_BoostTimer = boostDuration;
-            m_BoostInput = false; // Consume input
+            m_BoostInput = false;
             if (bodyRenderer != null) bodyRenderer.material.color = Color.white;
         }
     }
 
     private void HandleMovementPhysics()
     {
-        // Rotation
-        float yawDelta = m_TurnInput * turnSpeed * Time.fixedDeltaTime;
-        Quaternion yawRot = Quaternion.AngleAxis(yawDelta, Vector3.up) * rBody.rotation;
-        
-        float yaw = yawRot.eulerAngles.y;
-        rBody.MoveRotation(Quaternion.Euler(0f, yaw, 0f));
+        rBody.angularVelocity = Vector3.zero;
 
-        // Translation
+        float yawDelta = m_TurnInput * turnSpeed * Time.fixedDeltaTime;
+        Quaternion newRot = rBody.rotation * Quaternion.Euler(0f, yawDelta, 0f);
+        rBody.MoveRotation(newRot);
+
         float currentMaxSpeed = isBoosting ? moveSpeed * boostMultiplier : moveSpeed;
-        Vector3 planarTarget = transform.forward * (m_MoveInput * currentMaxSpeed);
+        Vector3 forward = newRot * Vector3.forward;
+        Vector3 planarTarget = forward * (m_MoveInput * currentMaxSpeed);
 
         Vector3 v = rBody.linearVelocity;
-        float yVel = Mathf.Clamp(v.y, -maxVerticalSpeed, maxVerticalSpeed);
+        Vector3 vPlanar = new Vector3(v.x, 0f, v.z);
+        Vector3 vTarget = new Vector3(planarTarget.x, 0f, planarTarget.z);
 
-        Vector3 desired = new Vector3(planarTarget.x, yVel, planarTarget.z);
-        Vector3 newVel = Vector3.MoveTowards(v, desired, acceleration * Time.fixedDeltaTime);
-        
-        rBody.linearVelocity = newVel;
-    }
-
-    private void HandleUprightSnap()
-    {
-        if (!snapUprightIfTilted) return;
-
-        float tilt = Vector3.Angle(transform.up, Vector3.up);
-        if (tilt > tiltSnapDegrees)
-        {
-            float currentYaw = rBody.rotation.eulerAngles.y;
-            rBody.rotation = Quaternion.Euler(0f, currentYaw, 0f);
-
-            Vector3 av = rBody.angularVelocity;
-            rBody.angularVelocity = new Vector3(0f, av.y, 0f);
-        }
+        Vector3 vNew = Vector3.MoveTowards(vPlanar, vTarget, acceleration * Time.fixedDeltaTime);
+        rBody.linearVelocity = new Vector3(vNew.x, 0f, vNew.z);
     }
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
@@ -206,14 +172,9 @@ public class BattleBotAgent : Agent
 
         ApplyCappedPenalty(stepPenalty, ref stepPenaltyAcc, maxStepPenaltyPerEpisode);
 
-        // Cache inputs for FixedUpdate
         m_MoveInput = actionBuffers.ContinuousActions[0];
         m_TurnInput = actionBuffers.ContinuousActions[1];
-        
-        if (actionBuffers.DiscreteActions[0] == 1)
-        {
-            m_BoostInput = true;
-        }
+        m_BoostInput = actionBuffers.DiscreteActions[0] == 1;
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -225,8 +186,6 @@ public class BattleBotAgent : Agent
         sensor.AddObservation(isBoosting ? 1.0f : 0.0f);
         sensor.AddObservation(GetActiveBalloonCount() / 3.0f);
     }
-
-    // Helper Methods
 
     public bool RestoreBalloon()
     {
@@ -253,21 +212,6 @@ public class BattleBotAgent : Agent
         return count;
     }
 
-    void OnTriggerEnter(Collider other)
-    {
-        if (arena != null && arena.MatchIsEnding) return;
-
-        if (other.CompareTag("Balloon"))
-        {
-            BalloonUnit hitBalloon = other.GetComponent<BalloonUnit>();
-            if (hitBalloon != null && hitBalloon.owner != null && hitBalloon.owner != this)
-            {
-                hitBalloon.Pop();
-                if (arena != null) arena.OnBalloonPopped(hitBalloon.owner, this);
-            }
-        }
-    }
-
     public void ApplyWallHitPenalty()
     {
         if (arena != null && arena.MatchIsEnding) return;
@@ -287,20 +231,21 @@ public class BattleBotAgent : Agent
     {
         if (perEventPenalty == 0f || cap == 0f) return;
 
-        if (cap > 0f) // Positive cap means we are capping a reward, not penalty (rare but handled)
+        if (cap > 0f)
         {
-            AddReward(perEventPenalty);
-            accumulator += perEventPenalty;
+            if (accumulator >= cap) return;
+            float remaining = cap - accumulator;
+            float delta = Mathf.Min(perEventPenalty, remaining);
+            AddReward(delta);
+            accumulator += delta;
             return;
         }
 
-        if (accumulator <= cap) return; // Cap reached
-
-        float remaining = cap - accumulator;
-        float delta = Mathf.Max(perEventPenalty, remaining);
-
-        AddReward(delta);
-        accumulator += delta;
+        if (accumulator <= cap) return;
+        float remainingNeg = cap - accumulator;
+        float deltaNeg = Mathf.Max(perEventPenalty, remainingNeg);
+        AddReward(deltaNeg);
+        accumulator += deltaNeg;
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)

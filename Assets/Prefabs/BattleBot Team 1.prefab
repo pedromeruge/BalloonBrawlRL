@@ -257,7 +257,7 @@ Transform:
   m_GameObject: {fileID: 4694792188194372926}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.6, y: 0, z: -0.25}
+  m_LocalPosition: {x: 0.6875, y: 0, z: 0}
   m_LocalScale: {x: 0.375, y: 1.875, z: 0.375}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -334,7 +334,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -365,6 +365,7 @@ GameObject:
   - component: {fileID: 8877722756593901449}
   - component: {fileID: 2447517276200396130}
   - component: {fileID: 2229068946061322278}
+  - component: {fileID: 5860763248210325874}
   m_Layer: 0
   m_Name: Spike
   m_TagString: Untagged
@@ -464,6 +465,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &5860763248210325874
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5196933972733522201}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3447a4d22a5a4d046ad05f97e2235e8f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpikeHitbox
+  owner: {fileID: 1387509055905604860}
 --- !u!1 &5206597754011295912
 GameObject:
   m_ObjectHideFlags: 0
@@ -769,7 +783,7 @@ Rigidbody:
   serializedVersion: 5
   m_Mass: 1
   m_LinearDamping: 1
-  m_AngularDamping: 5
+  m_AngularDamping: 2.5
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -781,11 +795,11 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 84
-  m_CollisionDetection: 1
+  m_CollisionDetection: 0
 --- !u!114 &1387509055905604860
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -812,9 +826,6 @@ MonoBehaviour:
   moveSpeed: 10
   turnSpeed: 200
   acceleration: 50
-  maxVerticalSpeed: 5
-  snapUprightIfTilted: 1
-  tiltSnapDegrees: 2
   boostMultiplier: 2
   boostDuration: 2
   boostCooldown: 5
@@ -844,9 +855,9 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 5b2eaf6f4d23d3c40adc0104d209f9d2, type: 3}
+  m_Model: {fileID: 0}
   m_InferenceDevice: 0
-  m_BehaviorType: 0
+  m_BehaviorType: 1
   m_BehaviorName: BattleBot
   TeamId: 0
   m_UseChildSensors: 1
@@ -986,7 +997,7 @@ Transform:
   m_GameObject: {fileID: 7031361610876654340}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.6, y: 0, z: -0.25}
+  m_LocalPosition: {x: -0.6875, y: 0, z: 0}
   m_LocalScale: {x: 0.375, y: 1.875, z: 0.375}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -1063,7 +1074,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -1188,7 +1199,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
