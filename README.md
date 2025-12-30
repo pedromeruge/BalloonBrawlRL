@@ -69,3 +69,10 @@ This project utilizes **Unity** and the **ML-Agents** library to test a Multi-Ag
 ---
 
 ## ✅ To-Do List
+- [ ] Treinar durante 30min para verificar se há algo de muito errado e se é necessário fazer ajustes de performance (reduzir número de arenas, reduzir número de raios nos sensores...)
+- [ ] Criar nova arena (maior, não simétrica, mais paredes de obstáculos...)
+- [ ] Adicionar 2 zonas de spawn de balões à nova arena e aumentar o size do vetor de observations em cada agente de 11 para 14 (3 observations para a nova zona)
+- [ ] Mudar a lógica de jogo de eliminar a outra equipa para ser a equipa que tem mais balões ao fim de X tempo (Os agentes não começam com o número máximo de balões que podem suportar. Eliminar o step penalty, uma vez que agora cada partida tem um tempo fixo para terminar e por isso penalizar por estar a demorar demasiado tempo já não faz sentido, isso fica embutido na própria lógica do jogo)
+- [ ] Implementar lógica "Battle Royale", de obrigar os agentes a se encontrarem no centro à medida que o tempo passa (force field, vento, chão inclinar..., o que parecer que melhor faz a lógica da maneira mais simples)
+- [ ] O cenário agora é muito mais complexo e então provavelmente precisamos de um bom "Curriculum" para ajudar o treino, tipo fazer os robos spawnarem mais no centro nas iterações iniciais e depois ir aumentando até a arena toda como faziamos, limitando as capacidades de um robô ou d a complexidade da arena (menos obstáculos ou assim) no início e ir aumentando gradualmente... É treinar e ver se é preciso e o que faria mais sentido
+- [ ] Treinar e ajustar o que for necessário (Modificar curriculum, ajustar algum reward...)
