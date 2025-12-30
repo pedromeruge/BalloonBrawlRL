@@ -1,6 +1,7 @@
 using UnityEngine;
 using Unity.MLAgents;
 using System.Collections;
+using System.Collections.Generic;
 
 public class BattleArena : MonoBehaviour
 {
@@ -21,6 +22,9 @@ public class BattleArena : MonoBehaviour
     public Material defaultFloorMaterial;
     public float winFlashDuration = 1.0f;
 
+    [Header("Arena Elements")]
+    public List<BalloonSpawner> balloonSpawners;
+
     [Header("Episode Settings")]
     [Tooltip("Hard timeout in environment steps (physics steps). Set to 0 to disable.")]
     public int maxEnvironmentSteps = 5000;
@@ -32,7 +36,7 @@ public class BattleArena : MonoBehaviour
     public float balloonPopPenalty = -0.1f;
 
     [Header("Spawn Area")]
-    [SerializeField] private float arenaHalfSize = 10f;
+    public float arenaHalfSize = 10f;
     [SerializeField] private float wallPadding = 0.5f;
     [SerializeField] private float spawnAreaFracDefault = 1.0f;
     [SerializeField] private int spawnTries = 80;

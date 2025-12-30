@@ -30,6 +30,9 @@ public class BattleBotAgent : Agent
     public float wallHitPenalty = -0.0001f;
     public float maxWallPenaltyPerEpisode = -0.05f;
 
+    [Header("Team Settings")]
+    public int teamId; // Assigned by BattleArena
+
     private Rigidbody rBody;
     private Color originalColor;
 
@@ -179,12 +182,75 @@ public class BattleBotAgent : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
+        // 1. Local Velocity (X, Z) - Good for movement control
         var localVel = transform.InverseTransformDirection(rBody != null ? rBody.linearVelocity : Vector3.zero);
         sensor.AddObservation(localVel.x);
         sensor.AddObservation(localVel.z);
+
+        // 2. Boost State - Good
         sensor.AddObservation(canBoost ? 1.0f : 0.0f);
         sensor.AddObservation(isBoosting ? 1.0f : 0.0f);
+
+        // 3. Health status
         sensor.AddObservation(GetActiveBalloonCount() / 3.0f);
+
+        // 4. Position Relative to Arena (Normalized to -1 to 1)
+        _ = Vector3.zero;
+        if (arena != null)
+        {
+            Vector3 localPos = arena.transform.InverseTransformPoint(transform.position);
+            // Normalize using arenaHalfSize (approx 10f). dividing by slightly more (e.g. 12) prevents edge clipping 
+            float normFactor = arena.arenaHalfSize + 2f; 
+            sensor.AddObservation(localPos.x / normFactor);
+            sensor.AddObservation(localPos.z / normFactor);
+        }
+        else
+        {
+            // Fallback if arena isn't assigned
+            sensor.AddObservation(0f);
+            sensor.AddObservation(0f);
+        }
+
+        // 5. Orientation Relative to Arena
+        Vector3 localFwd = Vector3.forward;
+        if (arena != null)
+        {
+            localFwd = arena.transform.InverseTransformDirection(transform.forward);
+        }
+        sensor.AddObservation(localFwd.x);
+        sensor.AddObservation(localFwd.z);
+
+        // 6. Team ID (One-Hot encoded)
+        // 0 = [1, 0] (Team A), 1 = [0, 1] (Team B)
+        sensor.AddOneHotObservation(teamId, 2);
+
+        // 7. Health Balloon Observations ---
+        if (arena != null && arena.balloonSpawners != null)
+        {
+            foreach (var spawner in arena.balloonSpawners)
+            {
+                // Check if this spawner has an active balloon
+                if (spawner != null && spawner.ActiveBalloon != null)
+                {
+                    // 1. Observation: Balloon Exists
+                    sensor.AddObservation(1.0f);
+
+                    // 2. Observation: Position Relative to Agent (Local Coordinates)
+                    Vector3 toBalloon = transform.InverseTransformPoint(spawner.ActiveBalloon.transform.position);
+
+                    // Normalize based on arena size (approx 20 units wide) to keep values between -1 and 1
+                    sensor.AddObservation(toBalloon.x / 20.0f);
+                    sensor.AddObservation(toBalloon.z / 20.0f);
+                }
+                else
+                {
+                    // No balloon here
+                    sensor.AddObservation(0.0f); // Exists = False
+                    sensor.AddObservation(0.0f); // X
+                    sensor.AddObservation(0.0f); // Z
+                }
+            }
+        }
     }
 
     public bool RestoreBalloon()

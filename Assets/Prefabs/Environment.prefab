@@ -284,14 +284,13 @@ MonoBehaviour:
   floorRenderer: {fileID: 6922663960298786032}
   defaultFloorMaterial: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
   winFlashDuration: 1
+  balloonSpawners:
+  - {fileID: 8448459209308118843}
   maxEnvironmentSteps: 5000
   winReward: 1
   loseReward: -1
   balloonPopReward: 0.1
   balloonPopPenalty: -0.1
-  enforceOutcomeSignForElo: 1
-  minWinnerFinalReward: 0.1
-  maxLoserFinalReward: -0.1
   arenaHalfSize: 10
   wallPadding: 0.25
   spawnAreaFracDefault: 1
@@ -301,8 +300,6 @@ MonoBehaviour:
     m_Bits: 128
   agentRadiusOverride: 0
   separationMargin: 0.1
-  verticalResolveTries: 8
-  verticalResolveStep: 0.02
 --- !u!1 &2904878059299952727
 GameObject:
   m_ObjectHideFlags: 0

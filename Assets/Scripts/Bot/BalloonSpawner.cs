@@ -9,6 +9,7 @@ public class BalloonSpawner : MonoBehaviour
     public float spawnHeight = 1.0f;
 
     private GameObject currentInstance;
+    public GameObject ActiveBalloon => currentInstance;
     private float timer = 0f;
 
     void Start()
