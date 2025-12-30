@@ -5,9 +5,9 @@ using System.Collections.Generic;
 
 public class BattleArena : MonoBehaviour
 {
-    [Header("Agents")]
-    public BattleBotAgent agentA;
-    public BattleBotAgent agentB;
+    [Header("Teams")]
+    public List<BattleBotAgent> team0Agents; // Blue Team
+    public List<BattleBotAgent> team1Agents; // Red Team
 
     [Header("Arena Root")]
     [SerializeField] private Transform arenaRoot;
@@ -21,22 +21,22 @@ public class BattleArena : MonoBehaviour
     public MeshRenderer floorRenderer;
     public Material defaultFloorMaterial;
     public float winFlashDuration = 1.0f;
-
-    [Header("Arena Elements")]
+    
+    [Header("Elements")]
     public List<BalloonSpawner> balloonSpawners;
 
     [Header("Episode Settings")]
     [Tooltip("Hard timeout in environment steps (physics steps). Set to 0 to disable.")]
     public int maxEnvironmentSteps = 5000;
 
-    [Header("Rewards (Self-Play Friendly)")]
-    public float winReward = 1.0f;
-    public float loseReward = -1.0f;
-    public float balloonPopReward = 0.1f;
-    public float balloonPopPenalty = -0.1f;
+    [Header("Rewards (MA-POCA)")]
+    public float winGroupReward = 1.0f;   // Given to the whole winning team
+    public float loseGroupReward = -1.0f; // Given to the whole losing team
+    public float balloonPopReward = 0.1f; // Individual reward for popping
+    public float balloonPopPenalty = -0.1f; // Individual penalty for getting popped
 
     [Header("Spawn Area")]
-    public float arenaHalfSize = 10f;
+    public float arenaHalfSize = 10f; // Public for agents to read
     [SerializeField] private float wallPadding = 0.5f;
     [SerializeField] private float spawnAreaFracDefault = 1.0f;
     [SerializeField] private int spawnTries = 80;
@@ -51,7 +51,8 @@ public class BattleArena : MonoBehaviour
     [Tooltip("Extra margin added on top of (radiusA + radiusB).")]
     [SerializeField] private float separationMargin = 0.15f;
 
-    private SimpleMultiAgentGroup agentGroup;
+    private SimpleMultiAgentGroup groupTeam0;
+    private SimpleMultiAgentGroup groupTeam1;
     private bool matchIsEnding = false;
     private int envStepCount = 0;
 
@@ -70,9 +71,31 @@ public class BattleArena : MonoBehaviour
 
     void Start()
     {
-        agentGroup = new SimpleMultiAgentGroup();
-        agentGroup.RegisterAgent(agentA);
-        agentGroup.RegisterAgent(agentB);
+        // Initialize Groups
+        groupTeam0 = new SimpleMultiAgentGroup();
+        groupTeam1 = new SimpleMultiAgentGroup();
+
+        // Register Team 0 (Blue)
+        foreach (var agent in team0Agents)
+        {
+            if (agent != null)
+            {
+                agent.teamId = 0;
+                agent.arena = this;
+                groupTeam0.RegisterAgent(agent);
+            }
+        }
+
+        // Register Team 1 (Red)
+        foreach (var agent in team1Agents)
+        {
+            if (agent != null)
+            {
+                agent.teamId = 1;
+                agent.arena = this;
+                groupTeam1.RegisterAgent(agent);
+            }
+        }
 
         if (floorRenderer != null) floorRenderer.material = defaultFloorMaterial;
 
@@ -97,29 +120,89 @@ public class BattleArena : MonoBehaviour
     {
         if (matchIsEnding) return;
 
-        attacker.AddReward(balloonPopReward);
-        victim.AddReward(balloonPopPenalty);
-
-        if (victim.GetActiveBalloonCount() <= 0)
+        if (attacker != null && victim != null)
         {
-            EndMatchWin(attacker, victim);
+            if (attacker.teamId == victim.teamId)
+            {
+                // --- CASE 1: Friendly Fire ---
+                // PUNISH the traitor heavily so they learn NOT to do this.
+                attacker.AddReward(-0.5f);
+            }
+            else
+            {
+                // --- CASE 2: Valid Enemy Kill ---
+                attacker.AddReward(balloonPopReward); // +0.1f
+                victim.AddReward(balloonPopPenalty);  // -0.1f
+            }
+        }
+
+        // Check if victim died
+        if (victim != null && victim.GetActiveBalloonCount() <= 0)
+        {
+            // Force the agent to "Die" state (Kinematic / Obstacle)
+            // We do NOT call EndEpisode() on the agent manually; we let the group handle it.
+            victim.LoseBalloon(); 
+            
+            CheckWinCondition();
         }
     }
 
-    private void EndMatchWin(BattleBotAgent winner, BattleBotAgent loser)
+    private void CheckWinCondition()
+    {
+        bool team0Alive = IsTeamAlive(team0Agents);
+        bool team1Alive = IsTeamAlive(team1Agents);
+
+        if (!team0Alive && !team1Alive)
+        {
+            EndMatchDraw(); // Rare case: simultaneously died?
+        }
+        else if (!team0Alive)
+        {
+            EndMatchWin(1); // Team 1 Wins
+        }
+        else if (!team1Alive)
+        {
+            EndMatchWin(0); // Team 0 Wins
+        }
+    }
+
+    private bool IsTeamAlive(List<BattleBotAgent> team)
+    {
+        if (team == null) return false;
+        foreach (var agent in team)
+        {
+            if (agent != null && !agent.IsDead) return true;
+        }
+        return false;
+    }
+
+    private void EndMatchWin(int winningTeamId)
     {
         if (matchIsEnding) return;
         matchIsEnding = true;
 
-        winner.SetReward(winReward);
-        loser.SetReward(loseReward);
-
-        if (floorRenderer != null && winner.teamMaterial != null)
+        if (winningTeamId == 0)
         {
-            StartCoroutine(FlashFloor(winner.teamMaterial));
+            groupTeam0.AddGroupReward(winGroupReward);
+            groupTeam1.AddGroupReward(loseGroupReward);
+            
+            // Visual feedback: Flash winner color
+            if (floorRenderer != null && team0Agents.Count > 0 && team0Agents[0] != null) 
+                StartCoroutine(FlashFloor(team0Agents[0].teamMaterial));
+        }
+        else
+        {
+            groupTeam1.AddGroupReward(winGroupReward);
+            groupTeam0.AddGroupReward(loseGroupReward);
+            
+            if (floorRenderer != null && team1Agents.Count > 0 && team1Agents[0] != null) 
+                StartCoroutine(FlashFloor(team1Agents[0].teamMaterial));
         }
 
-        agentGroup.EndGroupEpisode();
+        // End Group Episodes (Resets all agents in the groups)
+        groupTeam0.EndGroupEpisode();
+        groupTeam1.EndGroupEpisode();
+
         ResetScene();
         StartCoroutine(ClearMatchEndingNextFrame());
     }
@@ -129,19 +212,25 @@ public class BattleArena : MonoBehaviour
         if (matchIsEnding) return;
         matchIsEnding = true;
 
-        agentA.SetReward(0f);
-        agentB.SetReward(0f);
+        // Small negative or zero for draw
+        groupTeam0.AddGroupReward(0f);
+        groupTeam1.AddGroupReward(0f);
 
-        agentGroup.EndGroupEpisode();
+        groupTeam0.EndGroupEpisode();
+        groupTeam1.EndGroupEpisode();
+
         ResetScene();
         StartCoroutine(ClearMatchEndingNextFrame());
     }
 
     IEnumerator FlashFloor(Material winnerMat)
     {
-        if (floorRenderer != null) floorRenderer.material = winnerMat;
-        yield return new WaitForSeconds(winFlashDuration);
-        if (floorRenderer != null) floorRenderer.material = defaultFloorMaterial;
+        if (floorRenderer != null && winnerMat != null)
+        {
+            floorRenderer.material = winnerMat;
+            yield return new WaitForSeconds(winFlashDuration);
+            if (floorRenderer != null) floorRenderer.material = defaultFloorMaterial;
+        }
     }
 
     IEnumerator ClearMatchEndingNextFrame()
@@ -154,10 +243,76 @@ public class BattleArena : MonoBehaviour
     {
         envStepCount = 0;
 
-        agentA.ResetAgent();
-        agentB.ResetAgent();
+        // Reset Spawners (if needed, though they usually self-manage)
+        // Agents are reset automatically by EndGroupEpisode -> OnEpisodeBegin
+        // But we need to place them manually to ensure no overlaps
+        
+        List<BattleBotAgent> allAgents = new List<BattleBotAgent>();
+        if (team0Agents != null) allAgents.AddRange(team0Agents);
+        if (team1Agents != null) allAgents.AddRange(team1Agents);
 
-        PlaceAgentsNonOverlapping();
+        PlaceAgentsNonOverlapping(allAgents);
+    }
+
+    void PlaceAgentsNonOverlapping(List<BattleBotAgent> agents)
+    {
+        List<Vector3> placedPositions = new List<Vector3>();
+
+        foreach(var agent in agents)
+        {
+            if (agent == null) continue;
+
+            // Important: Agent physics must be reset before placement or immediately after
+            // (Agent.ResetAgent() handles velocity reset, so we just handle position)
+            
+            float r = GetAgentSpawnRadius(agent);
+            
+            // Find a valid position that doesn't overlap with previously placed agents in this loop
+            Vector3 posLocal = FindSpawnLocal(agent, r, placedPositions, separationMargin);
+            placedPositions.Add(posLocal);
+            
+            TeleportAgent(agent, LocalToWorld(posLocal), YawLocalToWorld(Random.Range(0f, 360f)));
+        }
+        
+        Physics.SyncTransforms();
+    }
+
+    Vector3 FindSpawnLocal(BattleBotAgent self, float selfRadius, List<Vector3> existingPositions, float requiredSeparation)
+    {
+        float halfH = Mathf.Max(0.05f, GetAgentHalfHeight(self));
+
+        for (int t = 0; t < spawnTries; t++)
+        {
+            var p = SampleSpawnLocal();
+
+            // 1. Check against agents we just placed in this reset loop
+            bool collision = false;
+            foreach(var existing in existingPositions)
+            {
+                 // Simple distance check: (r1 + r2) + margin. 
+                 // We assume other agents have roughly similar radius for simplicity, 
+                 // or we conservatively use selfRadius * 2
+                 if (Vector3.Distance(p, existing) < (selfRadius * 2f + requiredSeparation)) 
+                 {
+                     collision = true;
+                     break;
+                 }
+            }
+            if(collision) continue;
+
+            // 2. Check against static environment (Walls, etc)
+            var world = LocalToWorld(p);
+            float floorTop = GetFloorTopYAtXZ(world);
+            world.y = floorTop + halfH + spawnSkin;
+
+            if (!IsFreeWorld(world, selfRadius))
+                continue;
+
+            return p;
+        }
+
+        // Fallback
+        return SampleSpawnLocal();
     }
 
     Vector3 SampleSpawnLocal()
@@ -224,50 +379,15 @@ public class BattleArena : MonoBehaviour
         foreach (var h in hits)
         {
             if (h == null) continue;
-            if (agentA != null && h.transform.IsChildOf(agentA.transform)) continue;
-            if (agentB != null && h.transform.IsChildOf(agentB.transform)) continue;
+            
+            // Ignore collision with ANY agent (since we handle agent-agent overlap separately)
+            // This prevents "self-collision" or collision with teammates blocking a valid spawn
+            // if they happen to be on the spawnBlocker layer (though they shouldn't be).
+            if (h.GetComponentInParent<BattleBotAgent>() != null) continue;
+
             return false;
         }
         return true;
-    }
-
-    Vector3 FindSpawnLocal(BattleBotAgent self, float selfRadius, Vector3? otherLocal, float requiredSeparation)
-    {
-        float halfH = Mathf.Max(0.05f, GetAgentHalfHeight(self));
-
-        for (int t = 0; t < spawnTries; t++)
-        {
-            var p = SampleSpawnLocal();
-
-            if (otherLocal.HasValue && Vector3.Distance(p, otherLocal.Value) < requiredSeparation)
-                continue;
-
-            var world = LocalToWorld(p);
-            float floorTop = GetFloorTopYAtXZ(world);
-            world.y = floorTop + halfH + spawnSkin;
-
-            if (!IsFreeWorld(world, selfRadius))
-                continue;
-
-            return p;
-        }
-
-        return SampleSpawnLocal();
-    }
-
-    void PlaceAgentsNonOverlapping()
-    {
-        float rA = GetAgentSpawnRadius(agentA);
-        float rB = GetAgentSpawnRadius(agentB);
-        float required = rA + rB + separationMargin;
-
-        var pALocal = FindSpawnLocal(agentA, rA, null, 0f);
-        var pBLocal = FindSpawnLocal(agentB, rB, pALocal, required);
-
-        TeleportAgent(agentA, LocalToWorld(pALocal), YawLocalToWorld(Random.Range(0f, 360f)));
-        TeleportAgent(agentB, LocalToWorld(pBLocal), YawLocalToWorld(Random.Range(0f, 360f)));
-
-        Physics.SyncTransforms();
     }
 
     void TeleportAgent(BattleBotAgent a, Vector3 worldPos, Quaternion worldRot)

@@ -10,8 +10,10 @@ public class BattleBotAgent : Agent
     public BattleArena arena;
     public List<BalloonUnit> myBalloons;
 
-    [Header("Visual Settings")]
+    [Header("Team Settings")]
+    public int teamId; // 0 = Blue, 1 = Red (Assigned by Arena)
     public Material teamMaterial;
+    public Material deadMaterial; // Assign a grey material here
     public MeshRenderer bodyRenderer;
 
     [Header("Movement Settings")]
@@ -30,9 +32,6 @@ public class BattleBotAgent : Agent
     public float wallHitPenalty = -0.0001f;
     public float maxWallPenaltyPerEpisode = -0.05f;
 
-    [Header("Team Settings")]
-    public int teamId; // Assigned by BattleArena
-
     private Rigidbody rBody;
     private Color originalColor;
 
@@ -46,6 +45,9 @@ public class BattleBotAgent : Agent
 
     private float stepPenaltyAcc = 0f;
     private float wallPenaltyAcc = 0f;
+
+    // --- NEW: Death State ---
+    public bool IsDead { get; private set; } = false;
 
     void Start()
     {
@@ -78,13 +80,14 @@ public class BattleBotAgent : Agent
 
     public void ResetAgent()
     {
+        IsDead = false;
+
         if (rBody != null)
         {
+            rBody.isKinematic = false; // Allow movement again
             rBody.linearVelocity = Vector3.zero;
             rBody.angularVelocity = Vector3.zero;
-
-            float yaw = rBody.rotation.eulerAngles.y;
-            rBody.rotation = Quaternion.Euler(0f, yaw, 0f);
+            // Rotation is handled by Arena placement
         }
 
         m_MoveInput = 0f;
@@ -115,6 +118,7 @@ public class BattleBotAgent : Agent
 
     void FixedUpdate()
     {
+        if (IsDead) return; // Dead bots don't move
         if (arena != null && arena.MatchIsEnding) return;
         if (rBody == null) return;
 
@@ -171,6 +175,7 @@ public class BattleBotAgent : Agent
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
+        if (IsDead) return; // Dead bots take no actions
         if (arena != null && arena.MatchIsEnding) return;
 
         ApplyCappedPenalty(stepPenalty, ref stepPenaltyAcc, maxStepPenaltyPerEpisode);
@@ -182,36 +187,34 @@ public class BattleBotAgent : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        // 1. Local Velocity (X, Z) - Good for movement control
+        // 1. Local Velocity (2 floats)
         var localVel = transform.InverseTransformDirection(rBody != null ? rBody.linearVelocity : Vector3.zero);
         sensor.AddObservation(localVel.x);
         sensor.AddObservation(localVel.z);
 
-        // 2. Boost State - Good
+        // 2. Boost Info (2 floats)
         sensor.AddObservation(canBoost ? 1.0f : 0.0f);
         sensor.AddObservation(isBoosting ? 1.0f : 0.0f);
 
-        // 3. Health status
+        // 3. Health (1 float)
         sensor.AddObservation(GetActiveBalloonCount() / 3.0f);
 
-        // 4. Position Relative to Arena (Normalized to -1 to 1)
-        _ = Vector3.zero;
+        // 4. Arena Position (2 floats)
+        Vector3 localPos = Vector3.zero;
         if (arena != null)
         {
-            Vector3 localPos = arena.transform.InverseTransformPoint(transform.position);
-            // Normalize using arenaHalfSize (approx 10f). dividing by slightly more (e.g. 12) prevents edge clipping 
-            float normFactor = arena.arenaHalfSize + 2f; 
+            localPos = arena.transform.InverseTransformPoint(transform.position);
+            float normFactor = arena.arenaHalfSize + 2f;
             sensor.AddObservation(localPos.x / normFactor);
             sensor.AddObservation(localPos.z / normFactor);
         }
         else
         {
-            // Fallback if arena isn't assigned
             sensor.AddObservation(0f);
             sensor.AddObservation(0f);
         }
 
-        // 5. Orientation Relative to Arena
+        // 5. Orientation (2 floats)
         Vector3 localFwd = Vector3.forward;
         if (arena != null)
         {
@@ -220,34 +223,26 @@ public class BattleBotAgent : Agent
         sensor.AddObservation(localFwd.x);
         sensor.AddObservation(localFwd.z);
 
-        // 6. Team ID (One-Hot encoded)
-        // 0 = [1, 0] (Team A), 1 = [0, 1] (Team B)
+        // 6. Team ID (2 floats - One Hot)
         sensor.AddOneHotObservation(teamId, 2);
 
-        // 7. Health Balloon Observations ---
+        // 7. Health Balloons (N * 3 floats)
         if (arena != null && arena.balloonSpawners != null)
         {
             foreach (var spawner in arena.balloonSpawners)
             {
-                // Check if this spawner has an active balloon
                 if (spawner != null && spawner.ActiveBalloon != null)
                 {
-                    // 1. Observation: Balloon Exists
                     sensor.AddObservation(1.0f);
-
-                    // 2. Observation: Position Relative to Agent (Local Coordinates)
                     Vector3 toBalloon = transform.InverseTransformPoint(spawner.ActiveBalloon.transform.position);
-
-                    // Normalize based on arena size (approx 20 units wide) to keep values between -1 and 1
                     sensor.AddObservation(toBalloon.x / 20.0f);
                     sensor.AddObservation(toBalloon.z / 20.0f);
                 }
                 else
                 {
-                    // No balloon here
-                    sensor.AddObservation(0.0f); // Exists = False
-                    sensor.AddObservation(0.0f); // X
-                    sensor.AddObservation(0.0f); // Z
+                    sensor.AddObservation(0.0f);
+                    sensor.AddObservation(0.0f);
+                    sensor.AddObservation(0.0f);
                 }
             }
         }
@@ -255,6 +250,7 @@ public class BattleBotAgent : Agent
 
     public bool RestoreBalloon()
     {
+        if (IsDead) return false; // Dead bots can't heal
         if (myBalloons == null) return false;
         foreach (var balloon in myBalloons)
         {
@@ -278,14 +274,51 @@ public class BattleBotAgent : Agent
         return count;
     }
 
+    // Called by Arena when this agent is damaged
+    public void LoseBalloon()
+    {
+        if (IsDead) return;
+        
+        // Logic handled in Arena usually, but if called, check death
+        if (GetActiveBalloonCount() <= 0)
+        {
+            Die();
+        }
+    }
+
+    private void Die()
+    {
+        if (IsDead) return;
+        IsDead = true;
+
+        // Become an obstacle
+        if (rBody != null)
+        {
+            rBody.linearVelocity = Vector3.zero;
+            rBody.angularVelocity = Vector3.zero;
+            rBody.isKinematic = true; // Makes it an immovable wall
+        }
+
+        // Visual change
+        if (bodyRenderer != null && deadMaterial != null)
+        {
+            bodyRenderer.material = deadMaterial;
+        }
+
+        // Note: We do NOT call EndEpisode() here. 
+        // We stay in the episode so MA-POCA can assign group rewards to us later.
+    }
+
     public void ApplyWallHitPenalty()
     {
+        if (IsDead) return;
         if (arena != null && arena.MatchIsEnding) return;
         ApplyCappedPenalty(wallHitPenalty, ref wallPenaltyAcc, maxWallPenaltyPerEpisode);
     }
 
     void OnCollisionStay(Collision collision)
     {
+        if (IsDead) return;
         if (arena != null && arena.MatchIsEnding) return;
         if (collision.gameObject.CompareTag("Wall"))
         {

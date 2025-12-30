@@ -4,7 +4,6 @@ public class HealthPickup : MonoBehaviour
 {
     [Header("Reward")]
     public float healReward = 0.075f;
-    public bool zeroSum = true;
 
     private bool consumed = false;
 
@@ -12,24 +11,25 @@ public class HealthPickup : MonoBehaviour
     {
         if (consumed) return;
 
+        // Find the agent (Handle cases where collider is on a child object)
         BattleBotAgent agent = other.GetComponentInParent<BattleBotAgent>();
         if (agent == null) return;
 
+        // 1. Check if match is already deciding winner
         if (agent.arena != null && agent.arena.MatchIsEnding) return;
 
+        // 2. Try to heal (BattleBotAgent.RestoreBalloon handles the IsDead check)
         bool wasHealed = agent.RestoreBalloon();
-        if (!wasHealed) return;
+        
+        // If full health or dead, RestoreBalloon returns false, so we don't consume the pickup
+        if (!wasHealed) return; 
 
         consumed = true;
 
+        // 3. Apply Individual Reward
         agent.AddReward(healReward);
 
-        if (zeroSum && agent.arena != null)
-        {
-            var opp = (agent == agent.arena.agentA) ? agent.arena.agentB : agent.arena.agentA;
-            if (opp != null) opp.AddReward(-healReward);
-        }
-
+        // 4. Destroy the balloon object
         Destroy(gameObject);
     }
 }
