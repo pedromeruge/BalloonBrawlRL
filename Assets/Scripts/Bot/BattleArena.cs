@@ -56,6 +56,10 @@ public class BattleArena : MonoBehaviour
     private bool matchIsEnding = false;
     private int envStepCount = 0;
 
+    [Header("Time")]
+    public float matchDuration = 20f; 
+    private float timer = 0f;
+
     public bool MatchIsEnding => matchIsEnding;
 
     void Awake()
@@ -106,13 +110,41 @@ public class BattleArena : MonoBehaviour
     {
         if (matchIsEnding) return;
 
-        if (maxEnvironmentSteps > 0)
+        timer += Time.fixedDeltaTime;
+
+        if (timer >= matchDuration)
         {
-            envStepCount++;
-            if (envStepCount >= maxEnvironmentSteps)
-            {
-                EndMatchDraw();
-            }
+            DetermineWinnerByBalloons();
+        }
+    }
+
+    private int GetTotalTeamBalloons(List<BattleBotAgent> team)
+    {
+        int count = 0;
+        foreach (var agent in team)
+        {
+            if (agent != null)
+                count += agent.GetActiveBalloonCount();
+        }
+        return count;
+    }
+
+    private void DetermineWinnerByBalloons()
+    {
+        int team0Balloons = GetTotalTeamBalloons(team0Agents);
+        int team1Balloons = GetTotalTeamBalloons(team1Agents);
+
+        if (team0Balloons > team1Balloons)
+        {
+            EndMatchWin(0); // Equipa Azul ganha
+        }
+        else if (team1Balloons > team0Balloons)
+        {
+            EndMatchWin(1); // Equipa Vermelha ganha
+        }
+        else
+        {
+            EndMatchDraw(); // Empate se o número de balões for igual
         }
     }
 
@@ -143,37 +175,7 @@ public class BattleArena : MonoBehaviour
             // We do NOT call EndEpisode() on the agent manually; we let the group handle it.
             victim.LoseBalloon(); 
             
-            CheckWinCondition();
         }
-    }
-
-    private void CheckWinCondition()
-    {
-        bool team0Alive = IsTeamAlive(team0Agents);
-        bool team1Alive = IsTeamAlive(team1Agents);
-
-        if (!team0Alive && !team1Alive)
-        {
-            EndMatchDraw(); // Rare case: simultaneously died?
-        }
-        else if (!team0Alive)
-        {
-            EndMatchWin(1); // Team 1 Wins
-        }
-        else if (!team1Alive)
-        {
-            EndMatchWin(0); // Team 0 Wins
-        }
-    }
-
-    private bool IsTeamAlive(List<BattleBotAgent> team)
-    {
-        if (team == null) return false;
-        foreach (var agent in team)
-        {
-            if (agent != null && !agent.IsDead) return true;
-        }
-        return false;
     }
 
     private void EndMatchWin(int winningTeamId)
@@ -213,8 +215,8 @@ public class BattleArena : MonoBehaviour
         matchIsEnding = true;
 
         // Small negative or zero for draw
-        groupTeam0.AddGroupReward(0f);
-        groupTeam1.AddGroupReward(0f);
+        groupTeam0.AddGroupReward(-0.1f);
+        groupTeam1.AddGroupReward(-0.1f);
 
         groupTeam0.EndGroupEpisode();
         groupTeam1.EndGroupEpisode();
@@ -242,11 +244,12 @@ public class BattleArena : MonoBehaviour
     void ResetScene()
     {
         envStepCount = 0;
+        timer = 0f;
 
         // Reset Spawners (if needed, though they usually self-manage)
         // Agents are reset automatically by EndGroupEpisode -> OnEpisodeBegin
         // But we need to place them manually to ensure no overlaps
-        
+
         List<BattleBotAgent> allAgents = new List<BattleBotAgent>();
         if (team0Agents != null) allAgents.AddRange(team0Agents);
         if (team1Agents != null) allAgents.AddRange(team1Agents);
