@@ -106,9 +106,16 @@ public class BattleBotAgent : Agent
 
         if (myBalloons != null)
         {
-            foreach (var balloon in myBalloons)
+            for (int i = 0; i < myBalloons.Count; i++)
             {
-                if (balloon != null) balloon.ResetBalloon();
+                if (i < 3) 
+                {
+                    myBalloons[i].ResetBalloon();
+                }
+                else 
+                {
+                    myBalloons[i].Pop();
+                }
             }
         }
     }
@@ -246,11 +253,18 @@ public class BattleBotAgent : Agent
     public bool RestoreBalloon()
     {
         if (myBalloons == null) return false;
-        foreach (var balloon in myBalloons)
+        for (int i = 0; i < myBalloons.Count; i++)
         {
-            if (balloon != null && !balloon.gameObject.activeSelf)
-            {
-                balloon.ResetBalloon();
+            var balloon = myBalloons[i];
+            if (balloon != null && !balloon.gameObject.activeSelf){
+                if (i < 3)
+                {
+                    myBalloons[i].ResetBalloon();
+                }
+                else
+                {
+                    myBalloons[i].Pop();
+                }
                 return true;
             }
         }
