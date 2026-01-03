@@ -167,15 +167,6 @@ public class BattleArena : MonoBehaviour
                 victim.AddReward(balloonPopPenalty);  // -0.1f
             }
         }
-
-        // Check if victim died
-        if (victim != null && victim.GetActiveBalloonCount() <= 0)
-        {
-            // Force the agent to "Die" state (Kinematic / Obstacle)
-            // We do NOT call EndEpisode() on the agent manually; we let the group handle it.
-            victim.LoseBalloon(); 
-            
-        }
     }
 
     private void EndMatchWin(int winningTeamId)

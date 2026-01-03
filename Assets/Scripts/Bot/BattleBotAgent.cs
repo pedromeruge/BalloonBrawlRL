@@ -46,8 +46,6 @@ public class BattleBotAgent : Agent
     private float stepPenaltyAcc = 0f;
     private float wallPenaltyAcc = 0f;
 
-    // --- NEW: Death State ---
-    public bool IsDead { get; private set; } = false;
 
     void Start()
     {
@@ -80,7 +78,6 @@ public class BattleBotAgent : Agent
 
     public void ResetAgent()
     {
-        IsDead = false;
 
         if (rBody != null)
         {
@@ -118,7 +115,6 @@ public class BattleBotAgent : Agent
 
     void FixedUpdate()
     {
-        if (IsDead) return; // Dead bots don't move
         if (arena != null && arena.MatchIsEnding) return;
         if (rBody == null) return;
 
@@ -175,7 +171,6 @@ public class BattleBotAgent : Agent
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
-        if (IsDead) return; // Dead bots take no actions
         if (arena != null && arena.MatchIsEnding) return;
 
         ApplyCappedPenalty(stepPenalty, ref stepPenaltyAcc, maxStepPenaltyPerEpisode);
@@ -250,7 +245,6 @@ public class BattleBotAgent : Agent
 
     public bool RestoreBalloon()
     {
-        if (IsDead) return false; // Dead bots can't heal
         if (myBalloons == null) return false;
         foreach (var balloon in myBalloons)
         {
@@ -263,6 +257,7 @@ public class BattleBotAgent : Agent
         return false;
     }
 
+
     public int GetActiveBalloonCount()
     {
         int count = 0;
@@ -274,51 +269,14 @@ public class BattleBotAgent : Agent
         return count;
     }
 
-    // Called by Arena when this agent is damaged
-    public void LoseBalloon()
-    {
-        if (IsDead) return;
-        
-        // Logic handled in Arena usually, but if called, check death
-        if (GetActiveBalloonCount() <= 0)
-        {
-            Die();
-        }
-    }
-
-    private void Die()
-    {
-        if (IsDead) return;
-        IsDead = true;
-
-        // Become an obstacle
-        if (rBody != null)
-        {
-            rBody.linearVelocity = Vector3.zero;
-            rBody.angularVelocity = Vector3.zero;
-            rBody.isKinematic = true; // Makes it an immovable wall
-        }
-
-        // Visual change
-        if (bodyRenderer != null && deadMaterial != null)
-        {
-            bodyRenderer.material = deadMaterial;
-        }
-
-        // Note: We do NOT call EndEpisode() here. 
-        // We stay in the episode so MA-POCA can assign group rewards to us later.
-    }
-
     public void ApplyWallHitPenalty()
     {
-        if (IsDead) return;
         if (arena != null && arena.MatchIsEnding) return;
         ApplyCappedPenalty(wallHitPenalty, ref wallPenaltyAcc, maxWallPenaltyPerEpisode);
     }
 
     void OnCollisionStay(Collision collision)
     {
-        if (IsDead) return;
         if (arena != null && arena.MatchIsEnding) return;
         if (collision.gameObject.CompareTag("Wall"))
         {
