@@ -247,6 +247,12 @@ public class BattleBotAgent : Agent
                 }
             }
         }
+
+        // factor of round progression (0 to 1) (1 float) - for wind scaling awareness
+        if (arena != null)
+        {
+            sensor.AddObservation(arena.timerElapsedFactor);
+        }
     }
 
     public bool RestoreBalloon(bool forceRestore = false)

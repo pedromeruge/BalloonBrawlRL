@@ -51,6 +51,16 @@ public class BattleArena : MonoBehaviour
     [Tooltip("Extra margin added on top of (radiusA + radiusB).")]
     [SerializeField] private float separationMargin = 0.15f;
 
+    [Header("Battle Royale Wind")]
+    [SerializeField] private bool enableWind = true;
+    [SerializeField] private bool enableDebugWindGizmos = false;
+    [SerializeField] private float maxWindForce = 40f;
+    [SerializeField] private AnimationCurve timeRamp = AnimationCurve.Linear(0, 0, 1, 1); // linear growth by default
+    [SerializeField] private float minBattleRoyaleRadius = 5f; // dead zone near center, where no wind is applied
+    [SerializeField] private float maxBattleRoyaleRadius = 25f; // starting radius at beginning of match
+    [SerializeField] private Transform shrinkingZoneVisual;
+    private float currentBattleRoyaleRadius; // current distance from center where wind is applying, depending on time and min/max radius specified
+
     private SimpleMultiAgentGroup groupTeam0;
     private SimpleMultiAgentGroup groupTeam1;
     private bool matchIsEnding = false;
@@ -59,7 +69,7 @@ public class BattleArena : MonoBehaviour
     [Header("Time")]
     public float matchDuration = 30f;
     private float timer = 0f;
-
+    public float timerElapsedFactor = 0f;
     public bool MatchIsEnding => matchIsEnding;
 
     void Awake()
@@ -81,6 +91,9 @@ public class BattleArena : MonoBehaviour
                 }
             }
         }
+
+        //setup shrinking border visual
+        shrinkingZoneVisual.gameObject.SetActive(true);
     }
 
     void Start()
@@ -121,6 +134,11 @@ public class BattleArena : MonoBehaviour
 
         timer += Time.fixedDeltaTime;
 
+        if (enableWind)
+        {
+            ApplyBattleRoyaleWind();
+        }
+        
         if (timer >= matchDuration)
         {
             DetermineWinnerByBalloons();
@@ -253,6 +271,7 @@ public class BattleArena : MonoBehaviour
     {
         envStepCount = 0;
         timer = 0f;
+        timerElapsedFactor = 0f;
 
         List<BattleBotAgent> allAgents = new List<BattleBotAgent>();
         if (team0Agents != null) allAgents.AddRange(team0Agents);
@@ -422,5 +441,72 @@ public class BattleArena : MonoBehaviour
         rb.position = worldPos;
         rb.rotation = worldRot;
         rb.WakeUp();
+    }
+
+    private void ApplyBattleRoyaleWind()
+    {
+        timerElapsedFactor = Mathf.Clamp01(timer / matchDuration);
+        float timeFactor = timeRamp.Evaluate(timerElapsedFactor);
+
+        currentBattleRoyaleRadius = Mathf.Lerp(maxBattleRoyaleRadius, minBattleRoyaleRadius, timeFactor);
+
+        ApplyWindToTeam(team0Agents, timeFactor);
+        ApplyWindToTeam(team1Agents, timeFactor);
+
+        UpdateShrinkingZoneVisual();
+    }
+
+    private void ApplyWindToTeam(List<BattleBotAgent> team, float timeFactor)
+    {
+        foreach (var agent in team)
+        {
+            if (agent == null) continue;
+
+            var rb = agent.GetComponent<Rigidbody>();
+            if (rb == null) continue;
+
+            // get position of player relative to arena (arena local space)
+            Vector3 localPos = arenaRoot.InverseTransformPoint(rb.position);
+            Vector2 planar = new Vector2(localPos.x, localPos.z);
+
+            // if inside safe zone, no wind applied
+            float dist = planar.magnitude;
+            if (dist < currentBattleRoyaleRadius) continue; 
+
+            // # apply wind force towards center depending on distance outside safe zone
+            // constant force regardless of how far outside the zone is
+            // float distFactor = Mathf.Clamp01(dist / maxBattleRoyaleRadius);
+            // Vector3 dirToCenter = -new Vector3(planar.x, 0f, planar.y).normalized;
+
+            // apply wind force that increases the further outside the zone the player is
+            float distOutside = Mathf.Max(0f, dist - currentBattleRoyaleRadius);
+            if (distOutside <= 0f) continue;
+            float distFactor = Mathf.Clamp01(distOutside / (maxBattleRoyaleRadius - currentBattleRoyaleRadius));
+            Vector3 dirToCenter = -new Vector3(planar.x, 0f, planar.y).normalized;
+
+            Vector3 force = dirToCenter * maxWindForce * distFactor * timeFactor;
+            rb.AddForce(force, ForceMode.VelocityChange);
+        }
+    }
+
+    // update the shrinking zone visual representation
+    private void UpdateShrinkingZoneVisual()
+    {
+        if (shrinkingZoneVisual == null) return;
+
+        // Assuming unit circle mesh of diameter 1
+        float diameter = currentBattleRoyaleRadius * 2f;
+        shrinkingZoneVisual.localScale = new Vector3(diameter, shrinkingZoneVisual.localScale.y, diameter);
+    }
+
+    public void OnDrawGizmos()
+    {
+       if (enableDebugWindGizmos && enableWind)
+       {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(arenaRoot.position, maxBattleRoyaleRadius);
+            Gizmos.color = Color.blue;
+            Gizmos.DrawWireSphere(arenaRoot.position, minBattleRoyaleRadius);
+       }
     }
 }
