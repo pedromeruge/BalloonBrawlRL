@@ -19,7 +19,7 @@ public class HealthPickup : MonoBehaviour
         if (agent.arena != null && agent.arena.MatchIsEnding) return;
 
         // 2. Try to heal (BattleBotAgent.RestoreBalloon handles the IsDead check)
-        bool wasHealed = agent.RestoreBalloon();
+        bool wasHealed = agent.RestoreBalloon(true);
         
         // If full health or dead, RestoreBalloon returns false, so we don't consume the pickup
         if (!wasHealed) return; 

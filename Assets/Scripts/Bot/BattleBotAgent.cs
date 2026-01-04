@@ -249,20 +249,27 @@ public class BattleBotAgent : Agent
         }
     }
 
-    public bool RestoreBalloon()
+    public bool RestoreBalloon(bool forceRestore = false)
     {
         if (myBalloons == null) return false;
         for (int i = 0; i < myBalloons.Count; i++)
         {
             var balloon = myBalloons[i];
             if (balloon != null && !balloon.gameObject.activeSelf){
-                if (i < 3)
+                if (forceRestore)
                 {
                     myBalloons[i].ResetBalloon();
                 }
                 else
                 {
-                    myBalloons[i].Pop();
+                    if (i < 3)
+                    {
+                        myBalloons[i].ResetBalloon();
+                    }
+                    else
+                    {
+                        myBalloons[i].Pop();
+                    }
                 }
                 return true;
             }
