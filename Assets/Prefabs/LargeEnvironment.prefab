@@ -951,8 +951,8 @@ Transform:
   m_GameObject: {fileID: 5843106213822123770}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 100, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7385945593855586555}
@@ -1081,7 +1081,7 @@ MonoBehaviour:
   loseGroupReward: -1
   balloonPopReward: 0.1
   balloonPopPenalty: -0.1
-  arenaHalfSize: 10
+  arenaHalfSize: 20
   wallPadding: 0.25
   spawnAreaFracDefault: 1
   spawnTries: 50
@@ -1091,36 +1091,46 @@ MonoBehaviour:
   agentRadiusOverride: 0
   separationMargin: 0.1
   enableWind: 1
-  enableDebugWindGizmos: 1
-  maxWindForce: 40
+  enableDebugCurrentWindGizmos: 1
+  enableDebugMaxMinWindGizmos: 0
+  maxWindForce: 60
   timeRamp:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
       value: 0
+      inSlope: 1.246392
+      outSlope: 1.246392
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.80086267
+      value: 0.99818885
       inSlope: 0
       outSlope: 0
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0
-      outWeight: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
     - serializedVersion: 3
       time: 1
       value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
+      inSlope: 0.009094964
+      outSlope: 0.009094964
+      tangentMode: 34
       weightedMode: 0
-      inWeight: 0
+      inWeight: 0.33333334
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  minBattleRoyaleRadius: 1.5
+  minBattleRoyaleRadius: 5
+  maxBattleRoyaleRadius: 40
   shrinkingZoneVisual: {fileID: 6973576289542363377}
   matchDuration: 20
-  timerElapsedFactor: 0
 --- !u!1 &6279770467355235266
 GameObject:
   m_ObjectHideFlags: 0

@@ -53,7 +53,8 @@ public class BattleArena : MonoBehaviour
 
     [Header("Battle Royale Wind")]
     [SerializeField] private bool enableWind = true;
-    [SerializeField] private bool enableDebugWindGizmos = false;
+    [SerializeField] private bool enableDebugCurrentWindGizmos = true;
+    [SerializeField] private bool enableDebugMaxMinWindGizmos = false;
     [SerializeField] private float maxWindForce = 40f;
     [SerializeField] private AnimationCurve timeRamp = AnimationCurve.Linear(0, 0, 1, 1); // linear growth by default
     [SerializeField] private float minBattleRoyaleRadius = 5f; // dead zone near center, where no wind is applied
@@ -69,7 +70,7 @@ public class BattleArena : MonoBehaviour
     [Header("Time")]
     public float matchDuration = 30f;
     private float timer = 0f;
-    public float timerElapsedFactor = 0f;
+    private float timerElapsedFactor = 0f;
     public bool MatchIsEnding => matchIsEnding;
 
     void Awake()
@@ -93,7 +94,9 @@ public class BattleArena : MonoBehaviour
         }
 
         //setup shrinking border visual
-        shrinkingZoneVisual.gameObject.SetActive(true);
+        if (enableDebugCurrentWindGizmos && shrinkingZoneVisual != null) {
+            shrinkingZoneVisual.gameObject.SetActive(true);
+        }
     }
 
     void Start()
@@ -492,7 +495,7 @@ public class BattleArena : MonoBehaviour
     // update the shrinking zone visual representation
     private void UpdateShrinkingZoneVisual()
     {
-        if (shrinkingZoneVisual == null) return;
+        if (shrinkingZoneVisual == null || !enableDebugCurrentWindGizmos) return;
 
         // Assuming unit circle mesh of diameter 1
         float diameter = currentBattleRoyaleRadius * 2f;
@@ -501,12 +504,17 @@ public class BattleArena : MonoBehaviour
 
     public void OnDrawGizmos()
     {
-       if (enableDebugWindGizmos && enableWind)
+       if (enableDebugMaxMinWindGizmos && enableWind)
        {
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(arenaRoot.position, maxBattleRoyaleRadius);
             Gizmos.color = Color.blue;
             Gizmos.DrawWireSphere(arenaRoot.position, minBattleRoyaleRadius);
        }
+    }
+
+    public float getTimerElapsedFactor()
+    {
+        return timerElapsedFactor;
     }
 }
