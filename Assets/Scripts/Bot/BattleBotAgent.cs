@@ -65,8 +65,8 @@ public class BattleBotAgent : Agent
             return;
         }
 
-        rBody.useGravity = false;
-        rBody.constraints |= RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ | RigidbodyConstraints.FreezePositionY;
+        rBody.useGravity = true;
+        rBody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
         rBody.collisionDetectionMode = CollisionDetectionMode.Discrete;
         rBody.interpolation = RigidbodyInterpolation.None;
     }
@@ -158,22 +158,21 @@ public class BattleBotAgent : Agent
 
     private void HandleMovementPhysics()
     {
-        rBody.angularVelocity = Vector3.zero;
-
         float yawDelta = m_TurnInput * turnSpeed * Time.fixedDeltaTime;
         Quaternion newRot = rBody.rotation * Quaternion.Euler(0f, yawDelta, 0f);
         rBody.MoveRotation(newRot);
 
         float currentMaxSpeed = isBoosting ? moveSpeed * boostMultiplier : moveSpeed;
-        Vector3 forward = newRot * Vector3.forward;
-        Vector3 planarTarget = forward * (m_MoveInput * currentMaxSpeed);
+        Vector3 forward = transform.forward;
 
-        Vector3 v = rBody.linearVelocity;
-        Vector3 vPlanar = new Vector3(v.x, 0f, v.z);
-        Vector3 vTarget = new Vector3(planarTarget.x, 0f, planarTarget.z);
+        Vector3 targetVelocity = forward * (m_MoveInput * currentMaxSpeed);
 
-        Vector3 vNew = Vector3.MoveTowards(vPlanar, vTarget, acceleration * Time.fixedDeltaTime);
-        rBody.linearVelocity = new Vector3(vNew.x, 0f, vNew.z);
+        Vector3 currentVelocity = rBody.linearVelocity;
+        Vector3 horizontalVelocity = new Vector3(currentVelocity.x, 0, currentVelocity.z);
+
+        Vector3 velocityChange = targetVelocity - horizontalVelocity;
+
+        rBody.AddForce(velocityChange * acceleration, ForceMode.Acceleration);
     }
 
     public override void OnActionReceived(ActionBuffers actionBuffers)

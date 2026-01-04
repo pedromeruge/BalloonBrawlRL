@@ -13,15 +13,15 @@ public class BattleArena : MonoBehaviour
     [SerializeField] private Transform arenaRoot;
 
     [Header("Floor")]
-    [SerializeField] private Collider floorCollider;
+    [SerializeField] private List<Collider> floorColliders = new List<Collider>();
     [SerializeField] private LayerMask floorMask = ~0;
     [SerializeField] private float spawnSkin = 0.02f;
 
     [Header("Arena Visuals")]
-    public MeshRenderer floorRenderer;
+    public List<MeshRenderer> floorRenderers = new List<MeshRenderer>();
     public Material defaultFloorMaterial;
     public float winFlashDuration = 1.0f;
-    
+
     [Header("Elements")]
     public List<BalloonSpawner> balloonSpawners;
 
@@ -57,7 +57,7 @@ public class BattleArena : MonoBehaviour
     private int envStepCount = 0;
 
     [Header("Time")]
-    public float matchDuration = 30f; 
+    public float matchDuration = 30f;
     private float timer = 0f;
 
     public bool MatchIsEnding => matchIsEnding;
@@ -66,10 +66,20 @@ public class BattleArena : MonoBehaviour
     {
         if (arenaRoot == null) arenaRoot = transform;
 
-        if (floorCollider == null && arenaRoot != null)
+        // Procura automaticamente todos os filhos que contenham "Floor" no nome
+        if (arenaRoot != null && (floorColliders.Count == 0 || floorRenderers.Count == 0))
         {
-            var floorT = arenaRoot.Find("Floor");
-            if (floorT != null) floorCollider = floorT.GetComponent<Collider>();
+            foreach (Transform child in arenaRoot.GetComponentsInChildren<Transform>())
+            {
+                if (child.name.Contains("Floor"))
+                {
+                    Collider col = child.GetComponent<Collider>();
+                    if (col != null && !floorColliders.Contains(col)) floorColliders.Add(col);
+
+                    MeshRenderer rend = child.GetComponent<MeshRenderer>();
+                    if (rend != null && !floorRenderers.Contains(rend)) floorRenderers.Add(rend);
+                }
+            }
         }
     }
 
@@ -101,8 +111,7 @@ public class BattleArena : MonoBehaviour
             }
         }
 
-        if (floorRenderer != null) floorRenderer.material = defaultFloorMaterial;
-
+        ResetFloorMaterial();
         ResetScene();
     }
 
@@ -115,6 +124,14 @@ public class BattleArena : MonoBehaviour
         if (timer >= matchDuration)
         {
             DetermineWinnerByBalloons();
+        }
+    }
+
+    private void ResetFloorMaterial()
+    {
+        foreach (var rend in floorRenderers)
+        {
+            if (rend != null) rend.material = defaultFloorMaterial;
         }
     }
 
@@ -136,15 +153,15 @@ public class BattleArena : MonoBehaviour
 
         if (team0Balloons > team1Balloons)
         {
-            EndMatchWin(0); // Equipa Azul ganha
+            EndMatchWin(0);
         }
         else if (team1Balloons > team0Balloons)
         {
-            EndMatchWin(1); // Equipa Vermelha ganha
+            EndMatchWin(1);
         }
         else
         {
-            EndMatchDraw(); // Empate se o número de balões for igual
+            EndMatchDraw();
         }
     }
 
@@ -156,15 +173,12 @@ public class BattleArena : MonoBehaviour
         {
             if (attacker.teamId == victim.teamId)
             {
-                // --- CASE 1: Friendly Fire ---
-                // PUNISH the traitor heavily so they learn NOT to do this.
                 attacker.AddReward(-0.5f);
             }
             else
             {
-                // --- CASE 2: Valid Enemy Kill ---
-                attacker.AddReward(balloonPopReward); // +0.1f
-                victim.AddReward(balloonPopPenalty);  // -0.1f
+                attacker.AddReward(balloonPopReward);
+                victim.AddReward(balloonPopPenalty);
             }
         }
     }
@@ -174,25 +188,25 @@ public class BattleArena : MonoBehaviour
         if (matchIsEnding) return;
         matchIsEnding = true;
 
+        Material winnerMat = null;
+
         if (winningTeamId == 0)
         {
             groupTeam0.AddGroupReward(winGroupReward);
             groupTeam1.AddGroupReward(loseGroupReward);
-            
-            // Visual feedback: Flash winner color
-            if (floorRenderer != null && team0Agents.Count > 0 && team0Agents[0] != null) 
-                StartCoroutine(FlashFloor(team0Agents[0].teamMaterial));
+            if (team0Agents.Count > 0 && team0Agents[0] != null)
+                winnerMat = team0Agents[0].teamMaterial;
         }
         else
         {
             groupTeam1.AddGroupReward(winGroupReward);
             groupTeam0.AddGroupReward(loseGroupReward);
-            
-            if (floorRenderer != null && team1Agents.Count > 0 && team1Agents[0] != null) 
-                StartCoroutine(FlashFloor(team1Agents[0].teamMaterial));
+            if (team1Agents.Count > 0 && team1Agents[0] != null)
+                winnerMat = team1Agents[0].teamMaterial;
         }
 
-        // End Group Episodes (Resets all agents in the groups)
+        if (winnerMat != null) StartCoroutine(FlashFloor(winnerMat));
+
         groupTeam0.EndGroupEpisode();
         groupTeam1.EndGroupEpisode();
 
@@ -205,7 +219,6 @@ public class BattleArena : MonoBehaviour
         if (matchIsEnding) return;
         matchIsEnding = true;
 
-        // Small negative or zero for draw
         groupTeam0.AddGroupReward(-0.1f);
         groupTeam1.AddGroupReward(-0.1f);
 
@@ -218,11 +231,15 @@ public class BattleArena : MonoBehaviour
 
     IEnumerator FlashFloor(Material winnerMat)
     {
-        if (floorRenderer != null && winnerMat != null)
+        if (floorRenderers.Count > 0 && winnerMat != null)
         {
-            floorRenderer.material = winnerMat;
+            foreach (var rend in floorRenderers)
+            {
+                if (rend != null) rend.material = winnerMat;
+            }
+
             yield return new WaitForSeconds(winFlashDuration);
-            if (floorRenderer != null) floorRenderer.material = defaultFloorMaterial;
+            ResetFloorMaterial();
         }
     }
 
@@ -237,10 +254,6 @@ public class BattleArena : MonoBehaviour
         envStepCount = 0;
         timer = 0f;
 
-        // Reset Spawners (if needed, though they usually self-manage)
-        // Agents are reset automatically by EndGroupEpisode -> OnEpisodeBegin
-        // But we need to place them manually to ensure no overlaps
-
         List<BattleBotAgent> allAgents = new List<BattleBotAgent>();
         if (team0Agents != null) allAgents.AddRange(team0Agents);
         if (team1Agents != null) allAgents.AddRange(team1Agents);
@@ -252,22 +265,17 @@ public class BattleArena : MonoBehaviour
     {
         List<Vector3> placedPositions = new List<Vector3>();
 
-        foreach(var agent in agents)
+        foreach (var agent in agents)
         {
             if (agent == null) continue;
 
-            // Important: Agent physics must be reset before placement or immediately after
-            // (Agent.ResetAgent() handles velocity reset, so we just handle position)
-            
             float r = GetAgentSpawnRadius(agent);
-            
-            // Find a valid position that doesn't overlap with previously placed agents in this loop
             Vector3 posLocal = FindSpawnLocal(agent, r, placedPositions, separationMargin);
             placedPositions.Add(posLocal);
-            
+
             TeleportAgent(agent, LocalToWorld(posLocal), YawLocalToWorld(Random.Range(0f, 360f)));
         }
-        
+
         Physics.SyncTransforms();
     }
 
@@ -279,22 +287,17 @@ public class BattleArena : MonoBehaviour
         {
             var p = SampleSpawnLocal();
 
-            // 1. Check against agents we just placed in this reset loop
             bool collision = false;
-            foreach(var existing in existingPositions)
+            foreach (var existing in existingPositions)
             {
-                 // Simple distance check: (r1 + r2) + margin. 
-                 // We assume other agents have roughly similar radius for simplicity, 
-                 // or we conservatively use selfRadius * 2
-                 if (Vector3.Distance(p, existing) < (selfRadius * 2f + requiredSeparation)) 
-                 {
-                     collision = true;
-                     break;
-                 }
+                if (Vector3.Distance(p, existing) < (selfRadius * 2f + requiredSeparation))
+                {
+                    collision = true;
+                    break;
+                }
             }
-            if(collision) continue;
+            if (collision) continue;
 
-            // 2. Check against static environment (Walls, etc)
             var world = LocalToWorld(p);
             float floorTop = GetFloorTopYAtXZ(world);
             world.y = floorTop + halfH + spawnSkin;
@@ -305,7 +308,6 @@ public class BattleArena : MonoBehaviour
             return p;
         }
 
-        // Fallback
         return SampleSpawnLocal();
     }
 
@@ -355,8 +357,26 @@ public class BattleArena : MonoBehaviour
 
     float GetFloorTopYAtXZ(Vector3 worldXZ)
     {
-        if (floorCollider != null)
-            return floorCollider.bounds.max.y;
+        if (floorColliders.Count > 0)
+        {
+            float highestY = -Mathf.Infinity;
+            bool hitAny = false;
+            foreach (var col in floorColliders)
+            {
+                if (col != null)
+                {
+                    if (col.bounds.Contains(new Vector3(worldXZ.x, col.bounds.center.y, worldXZ.z)))
+                    {
+                        if (col.bounds.max.y > highestY)
+                        {
+                            highestY = col.bounds.max.y;
+                            hitAny = true;
+                        }
+                    }
+                }
+            }
+            if (hitAny) return highestY;
+        }
 
         float rayStartY = arenaRoot.position.y + 10f;
         var origin = new Vector3(worldXZ.x, rayStartY, worldXZ.z);
@@ -373,12 +393,7 @@ public class BattleArena : MonoBehaviour
         foreach (var h in hits)
         {
             if (h == null) continue;
-            
-            // Ignore collision with ANY agent (since we handle agent-agent overlap separately)
-            // This prevents "self-collision" or collision with teammates blocking a valid spawn
-            // if they happen to be on the spawnBlocker layer (though they shouldn't be).
             if (h.GetComponentInParent<BattleBotAgent>() != null) continue;
-
             return false;
         }
         return true;
