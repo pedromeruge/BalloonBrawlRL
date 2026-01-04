@@ -1253,6 +1253,18 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3743974395748019533, guid: 19f063ec1a0a0038c8f0c03e77164e6d, type: 3}
+      propertyPath: myBalloons.Array.size
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3743974395748019533, guid: 19f063ec1a0a0038c8f0c03e77164e6d, type: 3}
+      propertyPath: 'myBalloons.Array.data[3]'
+      value: 
+      objectReference: {fileID: 933939077277042295}
+    - target: {fileID: 3743974395748019533, guid: 19f063ec1a0a0038c8f0c03e77164e6d, type: 3}
+      propertyPath: 'myBalloons.Array.data[4]'
+      value: 
+      objectReference: {fileID: 933939077277042294}
     - target: {fileID: 6629609180352849090, guid: 19f063ec1a0a0038c8f0c03e77164e6d, type: 3}
       propertyPath: m_BehaviorType
       value: 0
@@ -1340,6 +1352,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7bde026420a4ee748bd1d88859a0e5ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BalloonSpawner
+--- !u!114 &933939077277042294 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1058059787601850820, guid: 19f063ec1a0a0038c8f0c03e77164e6d, type: 3}
+  m_PrefabInstance: {fileID: 933939077277042291}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7afe49171c827b24096642c7243d58e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BalloonUnit
+--- !u!114 &933939077277042295 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1312472915425766681, guid: 19f063ec1a0a0038c8f0c03e77164e6d, type: 3}
+  m_PrefabInstance: {fileID: 933939077277042291}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7afe49171c827b24096642c7243d58e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BalloonUnit
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
