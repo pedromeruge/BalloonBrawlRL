@@ -190,16 +190,40 @@ public class BattleArena : MonoBehaviour
     {
         if (matchIsEnding) return;
 
-        if (attacker != null && victim != null)
+        var statsRecorder = Academy.Instance.StatsRecorder;
+
+            if (attacker != null && victim != null)
         {
             if (attacker.teamId == victim.teamId)
             {
                 attacker.AddReward(-0.5f);
+
+                if (attacker.teamId == 0)
+                {
+                    statsRecorder.Add("PopedTeamMemberBallons/Red", 1, StatAggregationMethod.Sum);
+                    statsRecorder.Add("PopedTeamMemberBallons/Blue", 0, StatAggregationMethod.Sum);
+                }
+                else
+                {
+                    statsRecorder.Add("PopedTeamMemberBallons/Red", 0, StatAggregationMethod.Sum);
+                    statsRecorder.Add("PopedTeamMemberBallons/Blue", 1, StatAggregationMethod.Sum);
+                }
             }
             else
             {
                 attacker.AddReward(balloonPopReward);
                 victim.AddReward(balloonPopPenalty);
+
+                if (attacker.teamId == 0)
+                {
+                    statsRecorder.Add("PopedOtherTeamBallons/Red", 1, StatAggregationMethod.Sum);
+                    statsRecorder.Add("PopedOtherTeamBallons/Blue", 0, StatAggregationMethod.Sum);
+                }
+                else
+                {
+                    statsRecorder.Add("PopedOtherTeamBallons/Red", 0, StatAggregationMethod.Sum);
+                    statsRecorder.Add("PopedOtherTeamBallons/Blue", 1, StatAggregationMethod.Sum);
+                }
             }
         }
     }
@@ -211,12 +235,17 @@ public class BattleArena : MonoBehaviour
 
         Material winnerMat = null;
 
+        var statsRecorder = Academy.Instance.StatsRecorder;
+
         if (winningTeamId == 0)
         {
             groupTeam0.AddGroupReward(winGroupReward);
             groupTeam1.AddGroupReward(loseGroupReward);
             if (team0Agents.Count > 0 && team0Agents[0] != null)
                 winnerMat = team0Agents[0].teamMaterial;
+
+            statsRecorder.Add("NumVictories/Red", 1, StatAggregationMethod.Sum);
+            statsRecorder.Add("NumVictories/Blue", 0, StatAggregationMethod.Sum);
         }
         else
         {
@@ -224,6 +253,9 @@ public class BattleArena : MonoBehaviour
             groupTeam0.AddGroupReward(loseGroupReward);
             if (team1Agents.Count > 0 && team1Agents[0] != null)
                 winnerMat = team1Agents[0].teamMaterial;
+
+            statsRecorder.Add("NumVictories/Red", 0, StatAggregationMethod.Sum);
+            statsRecorder.Add("NumVictories/Blue", 1, StatAggregationMethod.Sum);
         }
 
         if (winnerMat != null) StartCoroutine(FlashFloor(winnerMat));

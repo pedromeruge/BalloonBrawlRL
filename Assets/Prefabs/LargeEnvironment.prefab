@@ -533,7 +533,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5662564523414167623
 Transform:
   m_ObjectHideFlags: 0
@@ -1979,6 +1979,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: HealthSpawner (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 612590839342258645, guid: 1b537598702d44a8ca193a6016c7bd11, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1283136134124789367, guid: 1b537598702d44a8ca193a6016c7bd11, type: 3}
       propertyPath: m_LocalPosition.x
       value: -19.2
@@ -2125,6 +2129,10 @@ PrefabInstance:
     - target: {fileID: 612590839342258645, guid: 1b537598702d44a8ca193a6016c7bd11, type: 3}
       propertyPath: m_Name
       value: HealthSpawner
+      objectReference: {fileID: 0}
+    - target: {fileID: 612590839342258645, guid: 1b537598702d44a8ca193a6016c7bd11, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1283136134124789367, guid: 1b537598702d44a8ca193a6016c7bd11, type: 3}
       propertyPath: m_LocalPosition.x

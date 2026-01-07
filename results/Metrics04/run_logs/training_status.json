@@ -1,0 +1,30 @@
+{
+    "BattleBot": {
+        "elo": 1185.1332988467284,
+        "checkpoints": [
+            {
+                "steps": 18054,
+                "file_path": "results\\Metrics04\\BattleBot\\BattleBot-18054.onnx",
+                "reward": -0.09449999340641727,
+                "creation_time": 1767817546.5660884,
+                "auxillary_file_paths": [
+                    "results\\Metrics04\\BattleBot\\BattleBot-18054.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 18054,
+            "file_path": "results\\Metrics04\\BattleBot.onnx",
+            "reward": -0.09449999340641727,
+            "creation_time": 1767817546.5660884,
+            "auxillary_file_paths": [
+                "results\\Metrics04\\BattleBot\\BattleBot-18054.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cu121"
+    }
+}
