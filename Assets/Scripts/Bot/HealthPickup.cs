@@ -1,3 +1,4 @@
+using Unity.MLAgents;
 using UnityEngine;
 
 public class HealthPickup : MonoBehaviour
@@ -28,6 +29,19 @@ public class HealthPickup : MonoBehaviour
 
         // 3. Apply Individual Reward
         agent.AddReward(healReward);
+
+        var statsRecorder = Academy.Instance.StatsRecorder;
+
+        if (agent.teamId == 0)
+        {
+            statsRecorder.Add("PickedHealph/Red", 1, StatAggregationMethod.Sum);
+            statsRecorder.Add("PickedHealph/Blue", 0, StatAggregationMethod.Sum);
+        }
+        else
+        {
+            statsRecorder.Add("PickedHealph/Red", 1, StatAggregationMethod.Sum);
+            statsRecorder.Add("PickedHealph/Blue", 0, StatAggregationMethod.Sum);
+        }
 
         // 4. Destroy the balloon object
         Destroy(gameObject);
