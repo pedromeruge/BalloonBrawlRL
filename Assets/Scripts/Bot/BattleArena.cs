@@ -519,17 +519,17 @@ public class BattleArena : MonoBehaviour
 
             // # apply wind force towards center depending on distance outside safe zone
             // constant force regardless of how far outside the zone is
-            // float distFactor = Mathf.Clamp01(dist / maxBattleRoyaleRadius);
-            // Vector3 dirToCenter = -new Vector3(planar.x, 0f, planar.y).normalized;
-
-            // apply wind force that increases the further outside the zone the player is
-            float distOutside = Mathf.Max(0f, dist - currentBattleRoyaleRadius);
-            if (distOutside <= 0f) continue;
-            float distFactor = Mathf.Clamp01(distOutside / (maxBattleRoyaleRadius - currentBattleRoyaleRadius));
+            float distFactor = Mathf.Clamp01(dist / maxBattleRoyaleRadius);
             Vector3 dirToCenter = -new Vector3(planar.x, 0f, planar.y).normalized;
 
+            // apply wind force that increases the further outside the zone the player is
+            // float distOutside = Mathf.Max(0f, dist - currentBattleRoyaleRadius);
+            // if (distOutside <= 0f) continue;
+            // float distFactor = Mathf.Clamp01(distOutside / (maxBattleRoyaleRadius - currentBattleRoyaleRadius));
+            // Vector3 dirToCenter = -new Vector3(planar.x, 0f, planar.y).normalized;
+
             Vector3 force = dirToCenter * maxWindForce * distFactor * timeFactor;
-            rb.AddForce(force, ForceMode.VelocityChange);
+            rb.AddForce(force, ForceMode.Acceleration);
         }
     }
 
