@@ -237,6 +237,15 @@ public class BattleArena : MonoBehaviour
 
         var statsRecorder = Academy.Instance.StatsRecorder;
 
+        float totalBalloonsT0 = GetTotalTeamBalloons(team0Agents);
+        float avgBalloonsT0 = team0Agents.Count > 0 ? totalBalloonsT0 / team0Agents.Count : 0f;
+
+        float totalBalloonsT1 = GetTotalTeamBalloons(team1Agents);
+        float avgBalloonsT1 = team1Agents.Count > 0 ? totalBalloonsT1 / team1Agents.Count : 0f;
+
+        statsRecorder.Add("FinalAverageBalloons/Blue", avgBalloonsT0, StatAggregationMethod.Average);
+        statsRecorder.Add("FinalAverageBalloons/Red", avgBalloonsT1, StatAggregationMethod.Average);
+
         if (winningTeamId == 0)
         {
             groupTeam0.AddGroupReward(winGroupReward);
