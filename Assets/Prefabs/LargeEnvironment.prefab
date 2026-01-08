@@ -1123,8 +1123,8 @@ MonoBehaviour:
   agentRadiusOverride: 0
   separationMargin: 0.1
   enableWind: 1
-  enableDebugCurrentWindGizmos: 1
-  enableDebugMaxMinWindGizmos: 1
+  enableDebugCurrentWindGizmos: 0
+  enableDebugMaxMinWindGizmos: 0
   maxWindForce: 400
   timeRamp:
     serializedVersion: 2
