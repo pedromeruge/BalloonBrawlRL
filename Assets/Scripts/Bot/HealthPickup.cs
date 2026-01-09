@@ -39,8 +39,8 @@ public class HealthPickup : MonoBehaviour
         }
         else
         {
-            statsRecorder.Add("PickedHealph/Red", 1, StatAggregationMethod.Sum);
-            statsRecorder.Add("PickedHealph/Blue", 0, StatAggregationMethod.Sum);
+            statsRecorder.Add("PickedHealph/Red", 0, StatAggregationMethod.Sum);
+            statsRecorder.Add("PickedHealph/Blue", 1, StatAggregationMethod.Sum);
         }
 
         // 4. Destroy the balloon object
