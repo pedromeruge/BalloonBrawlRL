@@ -1,0 +1,66 @@
+{
+    "BattleBot": {
+        "checkpoints": [
+            {
+                "steps": 8499984,
+                "file_path": "results\\Final-20240109-01\\BattleBot\\BattleBot-8499984.onnx",
+                "reward": null,
+                "creation_time": 1768013701.079014,
+                "auxillary_file_paths": [
+                    "results\\Final-20240109-01\\BattleBot\\BattleBot-8499984.pt"
+                ]
+            },
+            {
+                "steps": 8999952,
+                "file_path": "results\\Final-20240109-01\\BattleBot\\BattleBot-8999952.onnx",
+                "reward": -0.05000000249128789,
+                "creation_time": 1768015511.3547242,
+                "auxillary_file_paths": [
+                    "results\\Final-20240109-01\\BattleBot\\BattleBot-8999952.pt"
+                ]
+            },
+            {
+                "steps": 9499950,
+                "file_path": "results\\Final-20240109-01\\BattleBot\\BattleBot-9499950.onnx",
+                "reward": -0.050007780004913606,
+                "creation_time": 1768017320.030728,
+                "auxillary_file_paths": [
+                    "results\\Final-20240109-01\\BattleBot\\BattleBot-9499950.pt"
+                ]
+            },
+            {
+                "steps": 9999982,
+                "file_path": "results\\Final-20240109-01\\BattleBot\\BattleBot-9999982.onnx",
+                "reward": -0.05052666895401974,
+                "creation_time": 1768019142.4099011,
+                "auxillary_file_paths": [
+                    "results\\Final-20240109-01\\BattleBot\\BattleBot-9999982.pt"
+                ]
+            },
+            {
+                "steps": 10001070,
+                "file_path": "results\\Final-20240109-01\\BattleBot\\BattleBot-10001070.onnx",
+                "reward": -0.05052666895401974,
+                "creation_time": 1768019142.759414,
+                "auxillary_file_paths": [
+                    "results\\Final-20240109-01\\BattleBot\\BattleBot-10001070.pt"
+                ]
+            }
+        ],
+        "elo": -5714.981996307657,
+        "final_checkpoint": {
+            "steps": 10001070,
+            "file_path": "results\\Final-20240109-01\\BattleBot.onnx",
+            "reward": -0.05052666895401974,
+            "creation_time": 1768019142.759414,
+            "auxillary_file_paths": [
+                "results\\Final-20240109-01\\BattleBot\\BattleBot-10001070.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cu121"
+    }
+}
