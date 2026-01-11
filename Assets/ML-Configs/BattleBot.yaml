@@ -1,6 +1,3 @@
-torch_settings:
-  device: cpu
-
 behaviors:
   BattleBot:
     trainer_type: poca
@@ -17,14 +14,15 @@ behaviors:
       normalize: false
       hidden_units: 256
       num_layers: 2
+      vis_encode_type: simple
     reward_signals:
       extrinsic:
         gamma: 0.99
         strength: 1.0
     keep_checkpoints: 5
-    max_steps: 10000000
+    max_steps: 15000000
     time_horizon: 64
-    summary_freq: 1000
+    summary_freq: 10000
     
     self_play:
       save_steps: 20000
@@ -33,3 +31,69 @@ behaviors:
       window: 10
       play_against_latest_model_ratio: 0.5
       initial_elo: 1200.0
+
+environment_parameters:
+  enable_obstacles:
+    curriculum:
+      - name: OpenField
+        completion_criteria:
+          measure: progress
+          behavior: BattleBot
+          signal_smoothing: true
+          min_lesson_length: 50
+          threshold: 0.15 
+        value: 0.0
+      - name: Obstacles
+        completion_criteria:
+          measure: progress
+          behavior: BattleBot
+          signal_smoothing: true
+          min_lesson_length: 50
+          threshold: 1.0
+        value: 1.0
+
+  enable_wind:
+    curriculum:
+      - name: Calm
+        completion_criteria:
+          measure: progress
+          behavior: BattleBot
+          signal_smoothing: true
+          min_lesson_length: 20
+          threshold: 0.10
+        value: 0.0
+      - name: Windy
+        completion_criteria:
+          measure: progress
+          behavior: BattleBot
+          signal_smoothing: true
+          min_lesson_length: 50
+          threshold: 1.0
+        value: 1.0
+
+  max_wind_force:
+    curriculum:
+      - name: NoWind
+        completion_criteria:
+          measure: progress
+          behavior: BattleBot
+          signal_smoothing: true
+          min_lesson_length: 20
+          threshold: 0.10
+        value: 0.0
+      - name: WeakWind
+        completion_criteria:
+          measure: progress
+          behavior: BattleBot
+          signal_smoothing: true
+          min_lesson_length: 30
+          threshold: 0.25
+        value: 15.0
+      - name: StrongWind
+        completion_criteria:
+          measure: progress
+          behavior: BattleBot
+          signal_smoothing: true
+          min_lesson_length: 50
+          threshold: 1.0
+        value: 40.0

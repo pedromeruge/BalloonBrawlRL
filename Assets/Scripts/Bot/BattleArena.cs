@@ -24,6 +24,7 @@ public class BattleArena : MonoBehaviour
 
     [Header("Elements")]
     public List<BalloonSpawner> balloonSpawners;
+    [SerializeField] private GameObject obstaclesRoot; // Reference to the parent of all wall obstacles
 
     [Header("Episode Settings")]
     [Tooltip("Hard timeout in environment steps (physics steps). Set to 0 to disable.")]
@@ -32,7 +33,7 @@ public class BattleArena : MonoBehaviour
     [Header("Rewards (MA-POCA)")]
     public float winGroupReward = 1.0f;   // Given to the whole winning team
     public float loseGroupReward = -1.0f; // Given to the whole losing team
-    public float balloonPopReward = 0.1f; // Individual reward for popping
+    public float balloonPopReward = 0.2f; // [Encourage Combat] Increased from 0.1f
     public float balloonPopPenalty = -0.1f; // Individual penalty for getting popped
 
     [Header("Spawn Area")]
@@ -196,17 +197,17 @@ public class BattleArena : MonoBehaviour
         {
             if (attacker.teamId == victim.teamId)
             {
-                attacker.AddReward(-0.5f);
+                attacker.AddReward(-0.1f); // [Tuned] Reduced Friendly Fire penalty from -0.5f
 
                 if (attacker.teamId == 0)
                 {
-                    statsRecorder.Add("PopedTeamMemberBallons/Red", 1, StatAggregationMethod.Sum);
-                    statsRecorder.Add("PopedTeamMemberBallons/Blue", 0, StatAggregationMethod.Sum);
+                    statsRecorder.Add("PoppedTeamMemberBallons/Red", 1, StatAggregationMethod.Sum);
+                    statsRecorder.Add("PoppedTeamMemberBallons/Blue", 0, StatAggregationMethod.Sum);
                 }
                 else
                 {
-                    statsRecorder.Add("PopedTeamMemberBallons/Red", 0, StatAggregationMethod.Sum);
-                    statsRecorder.Add("PopedTeamMemberBallons/Blue", 1, StatAggregationMethod.Sum);
+                    statsRecorder.Add("PoppedTeamMemberBallons/Red", 0, StatAggregationMethod.Sum);
+                    statsRecorder.Add("PoppedTeamMemberBallons/Blue", 1, StatAggregationMethod.Sum);
                 }
             }
             else
@@ -216,13 +217,13 @@ public class BattleArena : MonoBehaviour
 
                 if (attacker.teamId == 0)
                 {
-                    statsRecorder.Add("PopedOtherTeamBallons/Red", 1, StatAggregationMethod.Sum);
-                    statsRecorder.Add("PopedOtherTeamBallons/Blue", 0, StatAggregationMethod.Sum);
+                    statsRecorder.Add("PoppedOtherTeamBallons/Red", 1, StatAggregationMethod.Sum);
+                    statsRecorder.Add("PoppedOtherTeamBallons/Blue", 0, StatAggregationMethod.Sum);
                 }
                 else
                 {
-                    statsRecorder.Add("PopedOtherTeamBallons/Red", 0, StatAggregationMethod.Sum);
-                    statsRecorder.Add("PopedOtherTeamBallons/Blue", 1, StatAggregationMethod.Sum);
+                    statsRecorder.Add("PoppedOtherTeamBallons/Red", 0, StatAggregationMethod.Sum);
+                    statsRecorder.Add("PoppedOtherTeamBallons/Blue", 1, StatAggregationMethod.Sum);
                 }
             }
         }
@@ -255,6 +256,8 @@ public class BattleArena : MonoBehaviour
 
             statsRecorder.Add("Victories/Red", 1, StatAggregationMethod.Sum);
             statsRecorder.Add("Victories/Blue", 0, StatAggregationMethod.Sum);
+            statsRecorder.Add("Draws/Red", 0, StatAggregationMethod.Sum);
+            statsRecorder.Add("Draws/Blue", 0, StatAggregationMethod.Sum);
         }
         else
         {
@@ -265,6 +268,8 @@ public class BattleArena : MonoBehaviour
 
             statsRecorder.Add("Victories/Red", 0, StatAggregationMethod.Sum);
             statsRecorder.Add("Victories/Blue", 1, StatAggregationMethod.Sum);
+            statsRecorder.Add("Draws/Red", 0, StatAggregationMethod.Sum);
+            statsRecorder.Add("Draws/Blue", 0, StatAggregationMethod.Sum);
         }
 
         if (winnerMat != null) StartCoroutine(FlashFloor(winnerMat));
@@ -280,6 +285,12 @@ public class BattleArena : MonoBehaviour
     {
         if (matchIsEnding) return;
         matchIsEnding = true;
+
+        var statsRecorder = Academy.Instance.StatsRecorder;
+        statsRecorder.Add("Draws/Red", 1, StatAggregationMethod.Sum);
+        statsRecorder.Add("Draws/Blue", 1, StatAggregationMethod.Sum);
+        statsRecorder.Add("Victories/Red", 0, StatAggregationMethod.Sum);
+        statsRecorder.Add("Victories/Blue", 0, StatAggregationMethod.Sum);
 
         groupTeam0.AddGroupReward(-0.1f);
         groupTeam1.AddGroupReward(-0.1f);
@@ -313,6 +324,19 @@ public class BattleArena : MonoBehaviour
 
     void ResetScene()
     {
+        // [Curriculum] Update parameters from Academy
+        var envParams = Academy.Instance.EnvironmentParameters;
+        float windEnableParam = envParams.GetWithDefault("enable_wind", enableWind ? 1.0f : 0.0f);
+        enableWind = windEnableParam > 0.5f;
+
+        maxWindForce = envParams.GetWithDefault("max_wind_force", maxWindForce);
+
+        float obsEnableParam = envParams.GetWithDefault("enable_obstacles", 1.0f); // Default to ON for safety if param missing
+        if (obstaclesRoot != null)
+        {
+            obstaclesRoot.SetActive(obsEnableParam > 0.5f);
+        }
+
         envStepCount = 0;
         timer = 0f;
         timerElapsedFactor = 0f;

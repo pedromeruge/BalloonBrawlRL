@@ -34,13 +34,13 @@ public class HealthPickup : MonoBehaviour
 
         if (agent.teamId == 0)
         {
-            statsRecorder.Add("PickedHealph/Red", 1, StatAggregationMethod.Sum);
-            statsRecorder.Add("PickedHealph/Blue", 0, StatAggregationMethod.Sum);
+            statsRecorder.Add("PickedHealth/Red", 1, StatAggregationMethod.Sum);
+            statsRecorder.Add("PickedHealth/Blue", 0, StatAggregationMethod.Sum);
         }
         else
         {
-            statsRecorder.Add("PickedHealph/Red", 0, StatAggregationMethod.Sum);
-            statsRecorder.Add("PickedHealph/Blue", 1, StatAggregationMethod.Sum);
+            statsRecorder.Add("PickedHealth/Red", 0, StatAggregationMethod.Sum);
+            statsRecorder.Add("PickedHealth/Blue", 1, StatAggregationMethod.Sum);
         }
 
         // 4. Destroy the balloon object

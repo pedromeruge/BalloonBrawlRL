@@ -1107,11 +1107,12 @@ MonoBehaviour:
   winFlashDuration: 1
   balloonSpawners:
   - {fileID: 6321584101506023123}
-  - {fileID: 0}
+  - {fileID: 2388996906751183244}
+  obstaclesRoot: {fileID: 3983239489734432930}
   maxEnvironmentSteps: 5000
   winGroupReward: 1
   loseGroupReward: -1
-  balloonPopReward: 0.1
+  balloonPopReward: 0.2
   balloonPopPenalty: -0.1
   arenaHalfSize: 20
   wallPadding: 0.25
@@ -1845,14 +1846,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: BattleBotT0 A
       objectReference: {fileID: 0}
-    - target: {fileID: 6400593883494249571, guid: f815c5f799294ea46a09c048d6fa89e8, type: 3}
-      propertyPath: m_BehaviorType
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6400593883494249571, guid: f815c5f799294ea46a09c048d6fa89e8, type: 3}
-      propertyPath: m_BrainParameters.VectorObservationSize
-      value: 18
-      objectReference: {fileID: 0}
     - target: {fileID: 7575651834541109864, guid: f815c5f799294ea46a09c048d6fa89e8, type: 3}
       propertyPath: m_LocalPosition.x
       value: 19
@@ -1929,14 +1922,6 @@ PrefabInstance:
     - target: {fileID: 6054002300257992556, guid: 7f4c08371694f499f80e39454c5f4571, type: 3}
       propertyPath: m_Name
       value: BattleBotT1 B
-      objectReference: {fileID: 0}
-    - target: {fileID: 6400593883494249571, guid: 7f4c08371694f499f80e39454c5f4571, type: 3}
-      propertyPath: m_BehaviorType
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6400593883494249571, guid: 7f4c08371694f499f80e39454c5f4571, type: 3}
-      propertyPath: m_BrainParameters.VectorObservationSize
-      value: 18
       objectReference: {fileID: 0}
     - target: {fileID: 7575651834541109864, guid: 7f4c08371694f499f80e39454c5f4571, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2065,6 +2050,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1283136134124789367, guid: 1b537598702d44a8ca193a6016c7bd11, type: 3}
   m_PrefabInstance: {fileID: 2256472537944768926}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2388996906751183244 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4501336652487460882, guid: 1b537598702d44a8ca193a6016c7bd11, type: 3}
+  m_PrefabInstance: {fileID: 2256472537944768926}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7bde026420a4ee748bd1d88859a0e5ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BalloonSpawner
 --- !u!1001 &2356553322692069809
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2080,14 +2076,6 @@ PrefabInstance:
     - target: {fileID: 6054002300257992556, guid: f815c5f799294ea46a09c048d6fa89e8, type: 3}
       propertyPath: m_Name
       value: BattleBotT0 B
-      objectReference: {fileID: 0}
-    - target: {fileID: 6400593883494249571, guid: f815c5f799294ea46a09c048d6fa89e8, type: 3}
-      propertyPath: m_BehaviorType
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6400593883494249571, guid: f815c5f799294ea46a09c048d6fa89e8, type: 3}
-      propertyPath: m_BrainParameters.VectorObservationSize
-      value: 18
       objectReference: {fileID: 0}
     - target: {fileID: 7575651834541109864, guid: f815c5f799294ea46a09c048d6fa89e8, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2242,14 +2230,6 @@ PrefabInstance:
     - target: {fileID: 6054002300257992556, guid: 7f4c08371694f499f80e39454c5f4571, type: 3}
       propertyPath: m_Name
       value: BattleBotT1 A
-      objectReference: {fileID: 0}
-    - target: {fileID: 6400593883494249571, guid: 7f4c08371694f499f80e39454c5f4571, type: 3}
-      propertyPath: m_BehaviorType
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6400593883494249571, guid: 7f4c08371694f499f80e39454c5f4571, type: 3}
-      propertyPath: m_BrainParameters.VectorObservationSize
-      value: 18
       objectReference: {fileID: 0}
     - target: {fileID: 7575651834541109864, guid: 7f4c08371694f499f80e39454c5f4571, type: 3}
       propertyPath: m_LocalPosition.x

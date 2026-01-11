@@ -27,7 +27,7 @@ public class BattleBotAgent : Agent
     public float boostCooldown = 5f;
 
     [Header("Shaping Penalties (Capped)")]
-    public float stepPenalty = -0.00005f;
+    public float stepPenalty = 0f; // [Disabled] Counter-productive for fixed duration matches
     public float maxStepPenaltyPerEpisode = -0.2f;
     public float wallHitPenalty = -0.0001f;
     public float maxWallPenaltyPerEpisode = -0.05f;
@@ -299,6 +299,12 @@ public class BattleBotAgent : Agent
     {
         if (arena != null && arena.MatchIsEnding) return;
         ApplyCappedPenalty(wallHitPenalty, ref wallPenaltyAcc, maxWallPenaltyPerEpisode);
+
+        var stats = Academy.Instance.StatsRecorder;
+        if (teamId == 0)
+            stats.Add("WallHits/Blue", 1, StatAggregationMethod.Sum);
+        else
+            stats.Add("WallHits/Red", 1, StatAggregationMethod.Sum);
     }
 
     void OnCollisionStay(Collision collision)

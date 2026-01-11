@@ -49,7 +49,7 @@ MonoBehaviour:
   m_RaysPerDirection: 50
   m_MaxRayDegrees: 45
   m_SphereCastRadius: 0.05
-  m_RayLength: 25
+  m_RayLength: 50
   m_RayLayerMask:
     serializedVersion: 2
     m_Bits: 4294967291
@@ -232,7 +232,7 @@ MonoBehaviour:
   m_RaysPerDirection: 50
   m_MaxRayDegrees: 45
   m_SphereCastRadius: 0.05
-  m_RayLength: 25
+  m_RayLength: 50
   m_RayLayerMask:
     serializedVersion: 2
     m_Bits: 4294967291
@@ -686,7 +686,7 @@ MonoBehaviour:
   m_RaysPerDirection: 50
   m_MaxRayDegrees: 45
   m_SphereCastRadius: 0.05
-  m_RayLength: 25
+  m_RayLength: 50
   m_RayLayerMask:
     serializedVersion: 2
     m_Bits: 4294967291
@@ -995,7 +995,7 @@ MonoBehaviour:
   boostMultiplier: 2
   boostDuration: 2
   boostCooldown: 5
-  stepPenalty: -0.00005
+  stepPenalty: 0
   maxStepPenaltyPerEpisode: -0.1
   wallHitPenalty: -0.0001
   maxWallPenaltyPerEpisode: -0.05
@@ -1349,7 +1349,7 @@ MonoBehaviour:
   m_RaysPerDirection: 50
   m_MaxRayDegrees: 45
   m_SphereCastRadius: 0.05
-  m_RayLength: 25
+  m_RayLength: 50
   m_RayLayerMask:
     serializedVersion: 2
     m_Bits: 4294967291
