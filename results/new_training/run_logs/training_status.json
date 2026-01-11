@@ -1,0 +1,30 @@
+{
+    "enable_obstacles": {
+        "lesson_num": 0
+    },
+    "enable_wind": {
+        "lesson_num": 1
+    },
+    "max_wind_force": {
+        "lesson_num": 1
+    },
+    "BattleBot": {
+        "checkpoints": [
+            {
+                "steps": 499940,
+                "file_path": "results\\new_training\\BattleBot\\BattleBot-499940.onnx",
+                "reward": 0.03905833473416149,
+                "creation_time": 1768140615.5465336,
+                "auxillary_file_paths": [
+                    "results\\new_training\\BattleBot\\BattleBot-499940.pt"
+                ]
+            }
+        ],
+        "elo": 1008.6183191394829
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cu121"
+    }
+}
