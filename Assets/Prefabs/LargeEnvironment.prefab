@@ -1163,7 +1163,7 @@ MonoBehaviour:
   minBattleRoyaleRadius: 3
   maxBattleRoyaleRadius: 40
   shrinkingZoneVisual: {fileID: 6973576289542363377}
-  matchDuration: 20
+  matchDuration: 45
 --- !u!1 &6279770467355235266
 GameObject:
   m_ObjectHideFlags: 0

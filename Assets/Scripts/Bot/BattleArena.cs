@@ -69,7 +69,7 @@ public class BattleArena : MonoBehaviour
     private int envStepCount = 0;
 
     [Header("Time")]
-    public float matchDuration = 30f;
+    public float matchDuration = 45f;
     private float timer = 0f;
     private float timerElapsedFactor = 0f;
     public bool MatchIsEnding => matchIsEnding;

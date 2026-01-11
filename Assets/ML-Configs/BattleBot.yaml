@@ -1,3 +1,6 @@
+torch_settings:
+  device: cpu
+
 behaviors:
   BattleBot:
     trainer_type: poca
@@ -12,7 +15,7 @@ behaviors:
       learning_rate_schedule: linear
     network_settings:
       normalize: false
-      hidden_units: 256
+      hidden_units: 512
       num_layers: 2
       vis_encode_type: simple
     reward_signals:
@@ -41,7 +44,7 @@ environment_parameters:
           behavior: BattleBot
           signal_smoothing: true
           min_lesson_length: 50
-          threshold: 0.15 
+          threshold: 0.24
         value: 0.0
       - name: Obstacles
         completion_criteria:
@@ -60,7 +63,7 @@ environment_parameters:
           behavior: BattleBot
           signal_smoothing: true
           min_lesson_length: 20
-          threshold: 0.10
+          threshold: 0.035
         value: 0.0
       - name: Windy
         completion_criteria:
@@ -79,7 +82,7 @@ environment_parameters:
           behavior: BattleBot
           signal_smoothing: true
           min_lesson_length: 20
-          threshold: 0.10
+          threshold: 0.035
         value: 0.0
       - name: WeakWind
         completion_criteria:
@@ -87,7 +90,7 @@ environment_parameters:
           behavior: BattleBot
           signal_smoothing: true
           min_lesson_length: 30
-          threshold: 0.25
+          threshold: 0.15
         value: 15.0
       - name: StrongWind
         completion_criteria:
