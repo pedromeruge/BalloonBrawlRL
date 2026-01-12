@@ -2,12 +2,16 @@ using UnityEngine;
 using Unity.MLAgents;
 using System.Collections;
 using System.Collections.Generic;
+using System;
+using Random=UnityEngine.Random;
 
 public class BattleArena : MonoBehaviour
 {
-    [Header("Teams")]
-    public List<BattleBotAgent> team0Agents; // Blue Team
-    public List<BattleBotAgent> team1Agents; // Red Team
+    [Header("Teams (auto-populated from object children)")]
+    public List<List<BattleBotAgent>> teams = new List<List<BattleBotAgent>>();
+    [SerializeField] private List<Material> teamMaterial = new List<Material>();  // configurable in inspector
+    public List<String> teamNames = new List<String>();
+    private List<SimpleMultiAgentGroup> agentGroups = new List<SimpleMultiAgentGroup>();
 
     [Header("Arena Root")]
     [SerializeField] private Transform arenaRoot;
@@ -62,9 +66,6 @@ public class BattleArena : MonoBehaviour
     [SerializeField] private float maxBattleRoyaleRadius = 25f; // starting radius at beginning of match
     [SerializeField] private Transform shrinkingZoneVisual;
     private float currentBattleRoyaleRadius; // current distance from center where wind is applying, depending on time and min/max radius specified
-
-    private SimpleMultiAgentGroup groupTeam0;
-    private SimpleMultiAgentGroup groupTeam1;
     private bool matchIsEnding = false;
     private int envStepCount = 0;
 
@@ -98,35 +99,14 @@ public class BattleArena : MonoBehaviour
         if (enableDebugCurrentWindGizmos && shrinkingZoneVisual != null) {
             shrinkingZoneVisual.gameObject.SetActive(true);
         }
+
+        DiscoverTeams();
     }
 
     void Start()
     {
-        // Initialize Groups
-        groupTeam0 = new SimpleMultiAgentGroup();
-        groupTeam1 = new SimpleMultiAgentGroup();
 
-        // Register Team 0 (Blue)
-        foreach (var agent in team0Agents)
-        {
-            if (agent != null)
-            {
-                agent.teamId = 0;
-                agent.arena = this;
-                groupTeam0.RegisterAgent(agent);
-            }
-        }
-
-        // Register Team 1 (Red)
-        foreach (var agent in team1Agents)
-        {
-            if (agent != null)
-            {
-                agent.teamId = 1;
-                agent.arena = this;
-                groupTeam1.RegisterAgent(agent);
-            }
-        }
+        AssignTeamProperties();
 
         ResetFloorMaterial();
         ResetScene();
@@ -149,6 +129,62 @@ public class BattleArena : MonoBehaviour
         }
     }
 
+    private void DiscoverTeams()
+    {
+        teams.Clear();
+
+        GameObject teamsObj = transform.Find("Teams")?.gameObject;
+        foreach (Transform child in teamsObj.transform)
+        {
+            if (!child.CompareTag("Team") || !child.gameObject.activeSelf) continue;
+
+            var teamAgents = new List<BattleBotAgent>();
+            foreach (var agent in child.GetComponentsInChildren<BattleBotAgent>())
+            {
+                teamAgents.Add(agent);
+            }
+
+            if (teamAgents.Count > 0)
+            
+                teams.Add(teamAgents);
+
+            // Debug.Log($"[BattleArena] Discovered {teams.Count} teams in arena '{teamsObj.name}'.");
+        }
+
+        agentGroups.Clear();
+        for (int i = 0; i < teams.Count; i++)
+        {
+            agentGroups.Add(new SimpleMultiAgentGroup());
+        }
+    }
+
+    private void AssignTeamProperties()
+    {
+        for (int t = 0; t < teams.Count; t++)
+        {
+            foreach (BattleBotAgent agent in teams[t])
+            {
+                agent.teamId = t;
+                agent.arena = this;
+
+                // assign team color if provided
+                if (teamMaterial.Count > t)
+                {
+                    agent.setTeamMaterial(teamMaterial[t]);
+                }
+                else
+                {
+                    Debug.LogWarning($"Agent {agent.name} has no color defined for team {t}.");
+                }
+
+                agentGroups[t].RegisterAgent(agent);
+
+                //setup observation size dynamically according to number of teams and spawners
+                agent.InitializeObservationSize(teams.Count, balloonSpawners.Count);
+            }
+        }
+    }
+
     private void ResetFloorMaterial()
     {
         foreach (var rend in floorRenderers)
@@ -157,34 +193,55 @@ public class BattleArena : MonoBehaviour
         }
     }
 
-    private int GetTotalTeamBalloons(List<BattleBotAgent> team)
+    private int GetTotalTeamBalloons(int teamIndex)
     {
         int count = 0;
-        foreach (var agent in team)
+        foreach (var agent in teams[teamIndex])
         {
-            if (agent != null)
-                count += agent.GetActiveBalloonCount();
+            if (agent != null) count += agent.GetActiveBalloonCount();
         }
         return count;
     }
 
     private void DetermineWinnerByBalloons()
     {
-        int team0Balloons = GetTotalTeamBalloons(team0Agents);
-        int team1Balloons = GetTotalTeamBalloons(team1Agents);
+        var statsRecorder = Academy.Instance.StatsRecorder;
+        int teamCount = teams.Count;
+        int bestScore = -1;
 
-        if (team0Balloons > team1Balloons)
+        // compute balloons per team and record averages
+        List<int> totals = new List<int>();
+        for (int t = 0; t < teamCount; t++)
         {
-            EndMatchWin(0);
+            int total = GetTotalTeamBalloons(t);
+            totals.Add(total);
+
+            if (total > bestScore)
+            {
+                bestScore = total;
+            }
+
+            //count stats
+            float avg = teams[t].Count > 0 ? (float)total / teams[t].Count : 0f;
+            statsRecorder.Add($"FinalAverageBalloons/{teamNames[t]}", avg, StatAggregationMethod.Average);
         }
-        else if (team1Balloons > team0Balloons)
+
+        // count how many teams achieved maxScore
+        List<int> winners = new List<int>();
+        for (int t = 0; t < teamCount; t++)
         {
-            EndMatchWin(1);
+            if (totals[t] == bestScore) winners.Add(t);
         }
-        else
+
+        // check full draw case (aka all have same score)
+        if (winners.Count == teamCount)
         {
-            EndMatchDraw();
+            EndMatchFullDraw();
+            return;
         }
+
+        // Partial tie: multiple winners
+        EndMatchWinners(winners);
     }
 
     public void OnBalloonPopped(BattleBotAgent victim, BattleBotAgent attacker)
@@ -199,15 +256,16 @@ public class BattleArena : MonoBehaviour
             {
                 attacker.AddReward(-0.1f); // [Tuned] Reduced Friendly Fire penalty from -0.5f
 
-                if (attacker.teamId == 0)
+                for (int i = 0; i < teams.Count; i++)
                 {
-                    statsRecorder.Add("PoppedTeamMemberBallons/Red", 1, StatAggregationMethod.Sum);
-                    statsRecorder.Add("PoppedTeamMemberBallons/Blue", 0, StatAggregationMethod.Sum);
-                }
-                else
-                {
-                    statsRecorder.Add("PoppedTeamMemberBallons/Red", 0, StatAggregationMethod.Sum);
-                    statsRecorder.Add("PoppedTeamMemberBallons/Blue", 1, StatAggregationMethod.Sum);
+                    if (attacker.teamId == i)
+                    {
+                        statsRecorder.Add($"PoppedTeamMemberBallons/{teamNames[i]}", 1, StatAggregationMethod.Sum);
+                    }
+                    else
+                    {
+                        statsRecorder.Add($"PoppedTeamMemberBallons/{teamNames[i]}", 0, StatAggregationMethod.Sum);
+                    }
                 }
             }
             else
@@ -215,88 +273,70 @@ public class BattleArena : MonoBehaviour
                 attacker.AddReward(balloonPopReward);
                 victim.AddReward(balloonPopPenalty);
 
-                if (attacker.teamId == 0)
+                for (int i = 0; i< teams.Count; i++)
                 {
-                    statsRecorder.Add("PoppedOtherTeamBallons/Red", 1, StatAggregationMethod.Sum);
-                    statsRecorder.Add("PoppedOtherTeamBallons/Blue", 0, StatAggregationMethod.Sum);
-                }
-                else
-                {
-                    statsRecorder.Add("PoppedOtherTeamBallons/Red", 0, StatAggregationMethod.Sum);
-                    statsRecorder.Add("PoppedOtherTeamBallons/Blue", 1, StatAggregationMethod.Sum);
+                    if (attacker.teamId == i)
+                    {
+                        statsRecorder.Add($"PoppedOtherTeamBallons/{teamNames[i]}", 1, StatAggregationMethod.Sum);
+                    }
+                    else
+                    {
+                        statsRecorder.Add($"PoppedOtherTeamBallons/{teamNames[i]}", 0, StatAggregationMethod.Sum);
+                    }
                 }
             }
         }
     }
 
-    private void EndMatchWin(int winningTeamId)
+    private void EndMatchWinners(List<int> winningTeams)
     {
         if (matchIsEnding) return;
         matchIsEnding = true;
-
-        Material winnerMat = null;
-
         var statsRecorder = Academy.Instance.StatsRecorder;
 
-        float totalBalloonsT0 = GetTotalTeamBalloons(team0Agents);
-        float avgBalloonsT0 = team0Agents.Count > 0 ? totalBalloonsT0 / team0Agents.Count : 0f;
-
-        float totalBalloonsT1 = GetTotalTeamBalloons(team1Agents);
-        float avgBalloonsT1 = team1Agents.Count > 0 ? totalBalloonsT1 / team1Agents.Count : 0f;
-
-        statsRecorder.Add("FinalAverageBalloons/Blue", avgBalloonsT0, StatAggregationMethod.Average);
-        statsRecorder.Add("FinalAverageBalloons/Red", avgBalloonsT1, StatAggregationMethod.Average);
-
-        if (winningTeamId == 0)
+        for (int t = 0; t < teams.Count; t++)
         {
-            groupTeam0.AddGroupReward(winGroupReward);
-            groupTeam1.AddGroupReward(loseGroupReward);
-            if (team0Agents.Count > 0 && team0Agents[0] != null)
-                winnerMat = team0Agents[0].teamMaterial;
+            bool win = winningTeams.Contains(t);
+            if (win)
+            {
+                agentGroups[t].AddGroupReward(winGroupReward);
+                statsRecorder.Add($"Victories/{teamNames[t]}", 1, StatAggregationMethod.Sum);
+            }
+            else
+            {
+                agentGroups[t].AddGroupReward(loseGroupReward);
+                statsRecorder.Add($"Victories/{teamNames[t]}", 0, StatAggregationMethod.Sum);
+            }
 
-            statsRecorder.Add("Victories/Red", 1, StatAggregationMethod.Sum);
-            statsRecorder.Add("Victories/Blue", 0, StatAggregationMethod.Sum);
-            statsRecorder.Add("Draws/Red", 0, StatAggregationMethod.Sum);
-            statsRecorder.Add("Draws/Blue", 0, StatAggregationMethod.Sum);
-        }
-        else
-        {
-            groupTeam1.AddGroupReward(winGroupReward);
-            groupTeam0.AddGroupReward(loseGroupReward);
-            if (team1Agents.Count > 0 && team1Agents[0] != null)
-                winnerMat = team1Agents[0].teamMaterial;
-
-            statsRecorder.Add("Victories/Red", 0, StatAggregationMethod.Sum);
-            statsRecorder.Add("Victories/Blue", 1, StatAggregationMethod.Sum);
-            statsRecorder.Add("Draws/Red", 0, StatAggregationMethod.Sum);
-            statsRecorder.Add("Draws/Blue", 0, StatAggregationMethod.Sum);
+            statsRecorder.Add($"Draws/{teamNames[t]}", 0, StatAggregationMethod.Sum);
+            agentGroups[t].EndGroupEpisode();
         }
 
-        if (winnerMat != null) StartCoroutine(FlashFloor(winnerMat));
-
-        groupTeam0.EndGroupEpisode();
-        groupTeam1.EndGroupEpisode();
+        // Flash floor using first winners team material
+        var mat = teams[winningTeams[0]][0].teamMaterial;
+        StartCoroutine(FlashFloor(mat));
 
         ResetScene();
         StartCoroutine(ClearMatchEndingNextFrame());
     }
 
-    private void EndMatchDraw()
+    private void EndMatchFullDraw()
     {
         if (matchIsEnding) return;
         matchIsEnding = true;
 
         var statsRecorder = Academy.Instance.StatsRecorder;
-        statsRecorder.Add("Draws/Red", 1, StatAggregationMethod.Sum);
-        statsRecorder.Add("Draws/Blue", 1, StatAggregationMethod.Sum);
-        statsRecorder.Add("Victories/Red", 0, StatAggregationMethod.Sum);
-        statsRecorder.Add("Victories/Blue", 0, StatAggregationMethod.Sum);
 
-        groupTeam0.AddGroupReward(-0.1f);
-        groupTeam1.AddGroupReward(-0.1f);
+        for (var t = 0; t < teams.Count; t++)
+        {
+            // stats
+            statsRecorder.Add($"Draws/{teamNames[t]}", 1, StatAggregationMethod.Sum);
+            statsRecorder.Add($"Victories/{teamNames[t]}", 0, StatAggregationMethod.Sum);
 
-        groupTeam0.EndGroupEpisode();
-        groupTeam1.EndGroupEpisode();
+            // rewards and reset episode
+            agentGroups[t].AddGroupReward(-0.1f); // small penalty for draw
+            agentGroups[t].EndGroupEpisode();
+        }
 
         ResetScene();
         StartCoroutine(ClearMatchEndingNextFrame());
@@ -342,8 +382,12 @@ public class BattleArena : MonoBehaviour
         timerElapsedFactor = 0f;
 
         List<BattleBotAgent> allAgents = new List<BattleBotAgent>();
-        if (team0Agents != null) allAgents.AddRange(team0Agents);
-        if (team1Agents != null) allAgents.AddRange(team1Agents);
+
+        for (int t = 0; t < teams.Count; t++)
+        {
+            var teamAgents = teams[t];
+            if (teamAgents != null) allAgents.AddRange(teamAgents);
+        }
 
         PlaceAgentsNonOverlapping(allAgents);
     }
@@ -518,8 +562,10 @@ public class BattleArena : MonoBehaviour
 
         currentBattleRoyaleRadius = Mathf.Lerp(maxBattleRoyaleRadius, minBattleRoyaleRadius, timeFactor);
 
-        ApplyWindToTeam(team0Agents, timeFactor);
-        ApplyWindToTeam(team1Agents, timeFactor);
+        for (int i = 0; i < teams.Count; i++)
+        {
+            ApplyWindToTeam(teams[i], timeFactor);
+        }
 
         UpdateShrinkingZoneVisual();
     }

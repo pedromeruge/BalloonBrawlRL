@@ -29,20 +29,8 @@ public class HealthPickup : MonoBehaviour
 
         // 3. Apply Individual Reward
         agent.AddReward(healReward);
-
-        var statsRecorder = Academy.Instance.StatsRecorder;
-
-        if (agent.teamId == 0)
-        {
-            statsRecorder.Add("PickedHealth/Red", 1, StatAggregationMethod.Sum);
-            statsRecorder.Add("PickedHealth/Blue", 0, StatAggregationMethod.Sum);
-        }
-        else
-        {
-            statsRecorder.Add("PickedHealth/Red", 0, StatAggregationMethod.Sum);
-            statsRecorder.Add("PickedHealth/Blue", 1, StatAggregationMethod.Sum);
-        }
-
+        agent.addPickedHealthStats();
+        
         // 4. Destroy the balloon object
         Destroy(gameObject);
     }

@@ -3,6 +3,8 @@ using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
 using System.Collections.Generic;
+using Unity.VisualScripting.Antlr3.Runtime.Misc;
+using Unity.MLAgents.Policies;
 
 public class BattleBotAgent : Agent
 {
@@ -13,7 +15,6 @@ public class BattleBotAgent : Agent
     [Header("Team Settings")]
     public int teamId; // 0 = Blue, 1 = Red (Assigned by Arena)
     public Material teamMaterial;
-    public Material deadMaterial; // Assign a grey material here
     public MeshRenderer bodyRenderer;
 
     [Header("Movement Settings")]
@@ -69,6 +70,23 @@ public class BattleBotAgent : Agent
         rBody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
         rBody.collisionDetectionMode = CollisionDetectionMode.Discrete;
         rBody.interpolation = RigidbodyInterpolation.None;
+
+        //dynamically set observation space size 
+
+    }
+
+    //dynamically set observation space size 
+    public void InitializeObservationSize(int teamCount, int spawnerCount)
+    {
+        var behaviorParams = GetComponent<BehaviorParameters>();
+        if (arena == null || behaviorParams == null) return;
+
+        int teamObs = teamCount;           // one-hot team encoding
+        int spawnerObs = spawnerCount * 3; // each spawner adds 3 floats
+        int fixedObs = 10;  // localVel(2) + boost(2) + health(1) + pos(2) + fwd(2) + timer(1)
+
+        behaviorParams.BrainParameters.VectorObservationSize = fixedObs + teamObs + spawnerObs;
+        Debug.Log($"NOTE: If throwing warnings in editor about observation size mismatch, adjust the Behavior Parameters vector space size to: {behaviorParams.BrainParameters.VectorObservationSize}");
     }
 
     public override void OnEpisodeBegin()
@@ -224,8 +242,9 @@ public class BattleBotAgent : Agent
         sensor.AddObservation(localFwd.x);
         sensor.AddObservation(localFwd.z);
 
-        // 6. Team ID (2 floats - One Hot)
-        sensor.AddOneHotObservation(teamId, 2);
+        // 6. Team ID (N floats - One Hot)
+        // THIS CHANGES THE OBSERVATION SPACE FOR DIFFERENT TEAM SIZES !!! REQUIRES RETRAINING FROM GROUND ZERO OR FINE-TUNING
+        sensor.AddOneHotObservation(teamId, arena.teams.Count); 
 
         // 7. Health Balloons (N * 3 floats)
         if (arena != null && arena.balloonSpawners != null)
@@ -345,5 +364,37 @@ public class BattleBotAgent : Agent
         continuousActionsOut[0] = Input.GetAxis("Vertical");
         continuousActionsOut[1] = Input.GetAxis("Horizontal");
         discreteActionsOut[0] = Input.GetKey(KeyCode.Space) ? 1 : 0;
+    }
+
+    public bool setTeamMaterial(Material mat)
+    {
+        if (bodyRenderer != null && mat != null)
+        {
+            teamMaterial = mat;
+            bodyRenderer.material = teamMaterial;
+            originalColor = teamMaterial.color;
+        }
+        else {
+            Debug.LogWarning("setTeamMaterial: bodyRenderer or mat is null");
+            return false;
+        }
+        return true;
+    }
+
+    public void addPickedHealthStats()
+    {
+        var statsRecorder = Academy.Instance.StatsRecorder;
+
+        for (int i = 0; i < arena.teams.Count; i++)
+        {
+            if (teamId == i)
+            {
+                statsRecorder.Add($"PickedHealth/{arena.teams[i]}", 1, StatAggregationMethod.Sum);
+            }
+            else
+            {
+                statsRecorder.Add($"PickedHealth/{arena.teams[i]}", 0, StatAggregationMethod.Sum);
+            }
+        }
     }
 }
