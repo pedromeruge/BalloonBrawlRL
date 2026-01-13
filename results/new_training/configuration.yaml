@@ -75,7 +75,7 @@ environment_parameters:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 7533
+          seed: 2161
           value: 0.25
       name: CenterSmall
       completion_criteria:
@@ -88,7 +88,7 @@ environment_parameters:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 7534
+          seed: 2162
           value: 0.6
       name: CenterMedium
       completion_criteria:
@@ -101,7 +101,7 @@ environment_parameters:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 7535
+          seed: 2163
           value: 1.0
       name: FullArena
       completion_criteria:
@@ -116,7 +116,7 @@ environment_parameters:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 7536
+          seed: 2164
           value: 0.0
       name: OpenField
       completion_criteria:
@@ -129,7 +129,7 @@ environment_parameters:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 7537
+          seed: 2165
           value: 1.0
       name: Obstacles
       completion_criteria:
@@ -144,7 +144,7 @@ environment_parameters:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 7538
+          seed: 2166
           value: 0.0
       name: Calm
       completion_criteria:
@@ -157,7 +157,7 @@ environment_parameters:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 7539
+          seed: 2167
           value: 1.0
       name: Windy
       completion_criteria:
@@ -172,7 +172,7 @@ environment_parameters:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 7540
+          seed: 2168
           value: 0.0
       name: NoWind
       completion_criteria:
@@ -185,7 +185,7 @@ environment_parameters:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 7541
+          seed: 2169
           value: 15.0
       name: WeakWind
       completion_criteria:
@@ -198,7 +198,7 @@ environment_parameters:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 7542
+          seed: 2170
           value: 40.0
       name: StrongWind
       completion_criteria:
@@ -212,7 +212,7 @@ checkpoint_settings:
   run_id: new_training
   initialize_from: null
   load_model: false
-  resume: false
+  resume: true
   force: false
   train_model: false
   inference: false
