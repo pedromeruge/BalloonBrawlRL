@@ -62,6 +62,7 @@ public class BattleArena : MonoBehaviour
     [SerializeField] private float maxBattleRoyaleRadius = 25f; // starting radius at beginning of match
     [SerializeField] private Transform shrinkingZoneVisual;
     private float currentBattleRoyaleRadius; // current distance from center where wind is applying, depending on time and min/max radius specified
+    private float currentSpawnAreaFrac = 1.0f;
 
     private SimpleMultiAgentGroup groupTeam0;
     private SimpleMultiAgentGroup groupTeam1;
@@ -326,10 +327,13 @@ public class BattleArena : MonoBehaviour
     {
         // [Curriculum] Update parameters from Academy
         var envParams = Academy.Instance.EnvironmentParameters;
+        
         float windEnableParam = envParams.GetWithDefault("enable_wind", enableWind ? 1.0f : 0.0f);
         enableWind = windEnableParam > 0.5f;
 
         maxWindForce = envParams.GetWithDefault("max_wind_force", maxWindForce);
+
+        currentSpawnAreaFrac = envParams.GetWithDefault("spawn_area_frac", spawnAreaFracDefault);
 
         float obsEnableParam = envParams.GetWithDefault("enable_obstacles", 1.0f); // Default to ON for safety if param missing
         if (obstaclesRoot != null)
@@ -400,8 +404,8 @@ public class BattleArena : MonoBehaviour
 
     Vector3 SampleSpawnLocal()
     {
-        float spawnAreaFrac = Academy.Instance.EnvironmentParameters.GetWithDefault("spawn_area_frac", spawnAreaFracDefault);
-        float limit = (arenaHalfSize - wallPadding) * spawnAreaFrac;
+        // Use cached value
+        float limit = (arenaHalfSize - wallPadding) * currentSpawnAreaFrac;
 
         float x = Random.Range(-limit, limit);
         float z = Random.Range(-limit, limit);
