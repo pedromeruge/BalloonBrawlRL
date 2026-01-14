@@ -81,8 +81,9 @@ To train the agents or run the inference engine, you need a Python environment w
 
 3.  **Install Dependencies:**
     ```bash
-    pip install mlagents==0.30.0
-    # OR if you have a requirements.txt
+    pip install mlagents==0.27.0
+    pip install torch~=1.7.1
+    # OR with the provided requirements.txt
     pip install -r requirements.txt
     ```
 
@@ -99,6 +100,16 @@ To start a new training session with the defined Curriculum:
     mlagents-learn Assets/ML-Configs/BattleBot.yaml --run-id=MyTrainingSession --force
     ```
 3.  Press **Play** in the Unity Editor when prompted.
+
+#### Advanced Training Commands
+*   **Resume an interrupted training:**
+    ```bash
+    mlagents-learn Assets/ML-Configs/BattleBot.yaml --run-id=MyTrainingSession --resume
+    ```
+*   **Start a NEW run initialized from an old model (Fine-tuning):**
+    ```bash
+    mlagents-learn Assets/ML-Configs/BattleBot.yaml --run-id=NewSession --initialize-from=MyTrainingSession
+    ```
 
 ### Visualization (TensorBoard)
 To view training metrics (Reward, ELO, Win Rates, etc.):
