@@ -565,7 +565,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &5662564523414167623
 Transform:
   m_ObjectHideFlags: 0
@@ -1126,7 +1126,7 @@ MonoBehaviour:
   enableWind: 1
   enableDebugCurrentWindGizmos: 0
   enableDebugMaxMinWindGizmos: 0
-  maxWindForce: 400
+  maxWindForce: 40
   timeRamp:
     serializedVersion: 2
     m_Curve:
@@ -1163,7 +1163,7 @@ MonoBehaviour:
   minBattleRoyaleRadius: 3
   maxBattleRoyaleRadius: 40
   shrinkingZoneVisual: {fileID: 6973576289542363377}
-  matchDuration: 45
+  matchDuration: 30
 --- !u!1 &6279770467355235266
 GameObject:
   m_ObjectHideFlags: 0

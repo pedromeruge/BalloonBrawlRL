@@ -1,0 +1,78 @@
+{
+    "spawn_area_frac": {
+        "lesson_num": 2
+    },
+    "enable_obstacles": {
+        "lesson_num": 1
+    },
+    "enable_wind": {
+        "lesson_num": 1
+    },
+    "max_wind_force": {
+        "lesson_num": 2
+    },
+    "BattleBot": {
+        "checkpoints": [
+            {
+                "steps": 13499942,
+                "file_path": "results\\less_rays\\BattleBot\\BattleBot-13499942.onnx",
+                "reward": 0.07401945527514424,
+                "creation_time": 1768368897.5201654,
+                "auxillary_file_paths": [
+                    "results\\less_rays\\BattleBot\\BattleBot-13499942.pt"
+                ]
+            },
+            {
+                "steps": 13999946,
+                "file_path": "results\\less_rays\\BattleBot\\BattleBot-13999946.onnx",
+                "reward": 0.013953702629940515,
+                "creation_time": 1768371101.873297,
+                "auxillary_file_paths": [
+                    "results\\less_rays\\BattleBot\\BattleBot-13999946.pt"
+                ]
+            },
+            {
+                "steps": 14499936,
+                "file_path": "results\\less_rays\\BattleBot\\BattleBot-14499936.onnx",
+                "reward": 0.0961240817519461,
+                "creation_time": 1768373312.796588,
+                "auxillary_file_paths": [
+                    "results\\less_rays\\BattleBot\\BattleBot-14499936.pt"
+                ]
+            },
+            {
+                "steps": 14999940,
+                "file_path": "results\\less_rays\\BattleBot\\BattleBot-14999940.onnx",
+                "reward": 0.09232917488063525,
+                "creation_time": 1768375537.6363146,
+                "auxillary_file_paths": [
+                    "results\\less_rays\\BattleBot\\BattleBot-14999940.pt"
+                ]
+            },
+            {
+                "steps": 15000516,
+                "file_path": "results\\less_rays\\BattleBot\\BattleBot-15000516.onnx",
+                "reward": 0.09232917488063525,
+                "creation_time": 1768375537.9829981,
+                "auxillary_file_paths": [
+                    "results\\less_rays\\BattleBot\\BattleBot-15000516.pt"
+                ]
+            }
+        ],
+        "elo": -556.5936394208339,
+        "final_checkpoint": {
+            "steps": 15000516,
+            "file_path": "results\\less_rays\\BattleBot.onnx",
+            "reward": 0.09232917488063525,
+            "creation_time": 1768375537.9829981,
+            "auxillary_file_paths": [
+                "results\\less_rays\\BattleBot\\BattleBot-15000516.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cu121"
+    }
+}
