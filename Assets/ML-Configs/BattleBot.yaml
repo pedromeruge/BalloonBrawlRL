@@ -36,6 +36,33 @@ behaviors:
       initial_elo: 1200.0
 
 environment_parameters:
+  spawn_area_frac:
+    curriculum:
+      - name: CenterSmall
+        completion_criteria:
+          measure: progress
+          behavior: BattleBot
+          signal_smoothing: true
+          min_lesson_length: 20
+          threshold: 0.02
+        value: 0.25
+      - name: CenterMedium
+        completion_criteria:
+          measure: progress
+          behavior: BattleBot
+          signal_smoothing: true
+          min_lesson_length: 20
+          threshold: 0.05
+        value: 0.60
+      - name: FullArena
+        completion_criteria:
+          measure: progress
+          behavior: BattleBot
+          signal_smoothing: true
+          min_lesson_length: 50
+          threshold: 0.07
+        value: 1.0
+
   enable_obstacles:
     curriculum:
       - name: OpenField
@@ -44,7 +71,7 @@ environment_parameters:
           behavior: BattleBot
           signal_smoothing: true
           min_lesson_length: 50
-          threshold: 0.24
+          threshold: 0.20
         value: 0.0
       - name: Obstacles
         completion_criteria:
@@ -62,8 +89,8 @@ environment_parameters:
           measure: progress
           behavior: BattleBot
           signal_smoothing: true
-          min_lesson_length: 20
-          threshold: 0.035
+          min_lesson_length: 50
+          threshold: 0.07
         value: 0.0
       - name: Windy
         completion_criteria:
@@ -82,15 +109,15 @@ environment_parameters:
           behavior: BattleBot
           signal_smoothing: true
           min_lesson_length: 20
-          threshold: 0.035
+          threshold: 0.07
         value: 0.0
       - name: WeakWind
         completion_criteria:
           measure: progress
           behavior: BattleBot
           signal_smoothing: true
-          min_lesson_length: 30
-          threshold: 0.15
+          min_lesson_length: 50
+          threshold: 0.14
         value: 15.0
       - name: StrongWind
         completion_criteria:
