@@ -1,79 +1,124 @@
 # 🤖 MARL Balloon-Popping Robot Competition
+## Faculty of Engineering, University of Porto (FEUP)
+### Intelligent Robotics - Final Project
 
-## Overview
+## 👥 Authors
+* **David Amorim Cordeiro** (up202108820@up.pt)
+* **Ema Maria Monteiro Martins** (up202402794@up.pt)
+* **Isabel Maria Couto da Silva** (up201904925@up.pt)
+* **Pedro Miguel Meruge Ferreira** (up202409828@up.pt)
 
-This project utilizes **Unity** and the **ML-Agents** library to test a Multi-Agent Reinforcement Learning (MARL) competition. The environment consists of two opposing teams of robots fighting in a closed arena.
+> **Source Repository:** [https://github.com/davehubber/RI-Final-Project](https://github.com/davehubber/RI-Final-Project)
+> *Note: This repository is private. Access has been granted to `asousa@fe.up.pt` as per submission guidelines.*
+
+---
+
+## 📖 Overview
+
+This project implements a **Multi-Agent Reinforcement Learning (MARL)** competition using **Unity** and the **ML-Agents Toolkit**. It simulates a "Battle Royale" style tournament where autonomous robot agents compete in teams to collect resources and eliminate opponents.
+
+The agents are trained using **POCA (Posthumous Credit Assignment)**, utilizing a **Curriculum Learning** strategy that progressively increases environmental complexity (Spawning -> Wind Forces -> Obstacles).
 
 ### The Game Rules
-* **The Objective:** Completely eliminate the opposing team. A team wins when all robots on the opposing team have lost all their balloons.
-* **The Agents:** Simple cylinder robots with linear and angular velocity control.
-    * **Sensors:** "Simulated" Lidar (Ray Perception Sensor) to detect walls, enemies, and balloons.
-    * **Equipment:** A **Spike** on the front and a row of **3 Balloons** on the back.
-    * **Abilities:** A "Speed Boost" (short duration, fixed cooldown).
-* **Combat Mechanics:**
-    * **Popping:** To damage an enemy, a robot must drive its spike into an enemy's balloon.
-    * **Elimination:** When a robot loses all 3 balloons, it enters a "Dead" state. It stops moving and remains in the arena as a static physical obstacle.
+* **Objective:** The team with the highest number of balloons at the end of the **45-second match** wins.
+* **Agents:** Differential drive robots equipped with:
+    * **Sensors:** Ray Perception Sensors (Simulated Lidar) for detecting walls, enemies, and items.
+    * **Spike (Offense):** Used to pop enemy balloons on contact.
+    * **Balloons (Health/Score):** Agents start with 3 balloons (Max 5). Losing all balloons does not eliminate the agent, but prevents them from collecting more until they pick one up.
+    * **Boost:** A temporary speed boost ability (5s cooldown).
 * **The Arena:**
-    * Contains static walls.
-    * **Restocking:** There are 2 zones where balloons spawn periodically. Robots can pick these up to replenish health (Max capacity: 3 balloons).
-    * **Spawning:** Robots start at random positions at the beginning of every match.
+    * **Battle Royale Wind:** A centripetal force pushes agents towards the center as the match progresses, shrinking the playable area.
+    * **Restocking Zones:** Two central spawners periodically generate Health Balloons.
+    * **Obstacles:** Asymmetric walls that require complex navigation (enabled in later training stages).
+
+---
+
+## 📂 Directory Organization
+
+* **`Assets/Scripts/Bot/`**: Contains the core logic scripts.
+    * `BattleBotAgent.cs`: The Agent script handling observations, actions, and rewards.
+    * `BattleArena.cs`: Manages the match loop, spawning, scoring, and environmental forces (Wind).
+    * `BalloonSpawner.cs`: Handles resource regeneration.
+    * `SpikeHitbox.cs`: Detects collisions with enemy balloons.
+* **`Assets/ML-Configs/`**: Contains the training configuration files.
+    * `BattleBot.yaml`: The main config file defining hyperparameters, network architecture (512 units), and the 3-stage Curriculum.
 
 ---
 
 ## 🛠️ Setup Instructions
 
 ### 1. Unity Environment
-1.  **Install Unity Editor:**
-    * Version: **`6000.2.7f2`** (Install via Unity Hub).
-2.  **Install ML-Agents:**
-    * Open the project.
-    * Go to `Window` > `Package Manager`.
-    * Click the `+` icon in the top left.
-    * Search for ML Agents and install it.
+* **Unity Version:** `6000.2.7f2`
+* **Packages:**
+    * `com.unity.ml-agents` (Version `2.0.2`)
+    * `com.unity.ai.navigation`
 
 ### 2. Python Environment
-**Prerequisites:**
-* Install **Python 3.10.11** (or another version of 3.10, if you can't find this one).
+To train the agents or run the inference engine, you need a Python environment with the `mlagents` package.
 
-**Step-by-Step Setup:**
+**Prerequisites:** Python 3.10.x
 
-1.  **Create the Virtual Environment (Venv):**
-    Open your terminal at the **root** of this project folder.
+#### Step-by-Step Setup:
 
-    * **Windows:**
-        ```bash
-        python -m venv venv
-        ```
-    * **Mac / Linux:**
-        ```bash
-        python3 -m venv venv
-        ```
+1.  **Create a Virtual Environment:**
+    Open your terminal at the project root.
+    ```bash
+    # Windows
+    python -m venv venv
+
+    # Mac / Linux
+    python3 -m venv venv
+    ```
 
 2.  **Activate the Environment:**
+    ```bash
+    # Windows
+    .\venv\Scripts\activate
 
-    * **Windows:**
-        ```bash
-        .\venv\Scripts\activate
-        ```
-    * **Mac / Linux:**
-        ```bash
-        source venv/bin/activate
-        ```
+    # Mac / Linux
+    source venv/bin/activate
+    ```
 
 3.  **Install Dependencies:**
-    Once the environment is active (you should see `(venv)` in your terminal), run:
     ```bash
+    pip install mlagents==0.30.0
+    # OR if you have a requirements.txt
     pip install -r requirements.txt
     ```
 
 ---
 
-## ✅ To-Do List
-- [ ] Treinar durante 30min para verificar se há algo de muito errado e se é necessário fazer ajustes de performance (reduzir número de arenas, reduzir número de raios nos sensores...)
-- [x] Criar nova arena (maior, não simétrica, mais paredes de obstáculos...)
-- [x] Adicionar 2 zonas de spawn de balões à nova arena, aumentar o size do vetor de observations em cada agente de 11 para 14 (3 observations para a nova zona), e adicionar as 2 zonas à lista de health spawners no Arena Manager dos environments
-- [x] Mudar a lógica de jogo de eliminar a outra equipa para ser a equipa que tem mais balões ao fim de X tempo (Os agentes não começam com o número máximo de balões que podem suportar. Eliminar o step penalty, uma vez que agora cada partida tem um tempo fixo para terminar e por isso penalizar por estar a demorar demasiado tempo já não faz sentido, isso fica embutido na própria lógica do jogo)
-- [x] Implementar lógica "Battle Royale", de obrigar os agentes a se encontrarem no centro à medida que o tempo passa (force field, vento, chão inclinar..., o que parecer que melhor faz a lógica da maneira mais simples)
-- [ ] O cenário agora é muito mais complexo e então provavelmente precisamos de um bom "Curriculum" para ajudar o treino, tipo fazer os robos spawnarem mais no centro nas iterações iniciais e depois ir aumentando até a arena toda como faziamos, limitando as capacidades de um robô ou d a complexidade da arena (menos obstáculos ou assim) no início e ir aumentando gradualmente... É treinar e ver se é preciso e o que faria mais sentido
-- [x] O ELO provavelmente será difícil de ler aqui, eu acho que dá para colocar métricas customizadas. Se der, era bom colocar algumas que fossem bem mais específicas ao jogo para avaliar performance (tipo número de vitórias por equipa, estatísticas desse género)
-- [ ] Treinar e ajustar o que for necessário (Modificar curriculum, ajustar algum reward...)
+## 🚀 How to Run
+
+### Training Mode
+To start a new training session with the defined Curriculum:
+
+1.  Open the terminal and activate your virtual environment.
+2.  Run the following command:
+    ```bash
+    mlagents-learn Assets/ML-Configs/BattleBot.yaml --run-id=MyTrainingSession --force
+    ```
+3.  Press **Play** in the Unity Editor when prompted.
+
+### Visualization (TensorBoard)
+To view training metrics (Reward, ELO, Win Rates, etc.):
+
+```bash
+tensorboard --logdir results
+```
+Open the provided URL (usually `http://localhost:6006`) in your browser.
+
+### Inference Mode (Play/Demo)
+To watch the trained agents play:
+
+1.  Find the `.onnx` model file in `results/MyTrainingSession/BattleBot/`.
+    > **Note:** The best version evaluated in our report is located in `results/new_training/`.
+2.  Copy it to the `Assets/Models/` folder in Unity.
+3.  Select the **BattleBot** prefab (or agents in the scene).
+4.  Drag the `.onnx` file into the **Model** field of the `Behavior Parameters` component.
+5.  Set **Behavior Type** to `Inference Only`.
+6.  Press **Play** in Unity.
+
+---
+
+© 2025 FEUP - Faculty of Engineering, University of Porto
