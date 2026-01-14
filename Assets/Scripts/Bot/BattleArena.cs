@@ -366,7 +366,6 @@ public class BattleArena : MonoBehaviour
     {
         // [Curriculum] Update parameters from Academy
         var envParams = Academy.Instance.EnvironmentParameters;
-
         float windEnableParam = envParams.GetWithDefault("enable_wind", enableWind ? 1.0f : 0.0f);
         enableWind = windEnableParam > 0.5f;
 

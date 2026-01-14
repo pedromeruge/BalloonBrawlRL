@@ -70,12 +70,53 @@ engine_settings:
   no_graphics: false
   no_graphics_monitor: false
 environment_parameters:
+  spawn_area_frac:
+    curriculum:
+    - value:
+        sampler_type: constant
+        sampler_parameters:
+          seed: 2161
+          value: 0.25
+      name: CenterSmall
+      completion_criteria:
+        behavior: BattleBot
+        measure: progress
+        min_lesson_length: 20
+        signal_smoothing: true
+        threshold: 0.02
+        require_reset: false
+    - value:
+        sampler_type: constant
+        sampler_parameters:
+          seed: 2162
+          value: 0.6
+      name: CenterMedium
+      completion_criteria:
+        behavior: BattleBot
+        measure: progress
+        min_lesson_length: 20
+        signal_smoothing: true
+        threshold: 0.05
+        require_reset: false
+    - value:
+        sampler_type: constant
+        sampler_parameters:
+          seed: 2163
+          value: 1.0
+      name: FullArena
+      completion_criteria:
+        behavior: BattleBot
+        measure: progress
+        min_lesson_length: 50
+        signal_smoothing: true
+        threshold: 0.07
+        require_reset: false
   enable_obstacles:
     curriculum:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 3202
+          seed: 2164
           value: 0.0
       name: OpenField
       completion_criteria:
@@ -83,12 +124,12 @@ environment_parameters:
         measure: progress
         min_lesson_length: 50
         signal_smoothing: true
-        threshold: 0.24
+        threshold: 0.2
         require_reset: false
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 3203
+          seed: 2165
           value: 1.0
       name: Obstacles
       completion_criteria:
@@ -103,20 +144,20 @@ environment_parameters:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 3204
+          seed: 2166
           value: 0.0
       name: Calm
       completion_criteria:
         behavior: BattleBot
         measure: progress
-        min_lesson_length: 20
+        min_lesson_length: 50
         signal_smoothing: true
-        threshold: 0.035
+        threshold: 0.07
         require_reset: false
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 3205
+          seed: 2167
           value: 1.0
       name: Windy
       completion_criteria:
@@ -131,7 +172,7 @@ environment_parameters:
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 3206
+          seed: 2168
           value: 0.0
       name: NoWind
       completion_criteria:
@@ -139,25 +180,25 @@ environment_parameters:
         measure: progress
         min_lesson_length: 20
         signal_smoothing: true
-        threshold: 0.035
+        threshold: 0.07
         require_reset: false
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 3207
+          seed: 2169
           value: 15.0
       name: WeakWind
       completion_criteria:
         behavior: BattleBot
         measure: progress
-        min_lesson_length: 30
+        min_lesson_length: 50
         signal_smoothing: true
-        threshold: 0.15
+        threshold: 0.14
         require_reset: false
     - value:
         sampler_type: constant
         sampler_parameters:
-          seed: 3208
+          seed: 2170
           value: 40.0
       name: StrongWind
       completion_criteria:
@@ -171,7 +212,7 @@ checkpoint_settings:
   run_id: new_training
   initialize_from: null
   load_model: false
-  resume: false
+  resume: true
   force: false
   train_model: false
   inference: false
