@@ -1,0 +1,105 @@
+behaviors:
+  BattleBot:
+    trainer_type: poca
+    hyperparameters:
+      batch_size: 2048
+      buffer_size: 20480
+      learning_rate: 0.0003
+      beta: 0.01
+      epsilon: 0.2
+      lambd: 0.95
+      num_epoch: 3
+      learning_rate_schedule: linear
+    network_settings:
+      normalize: false
+      hidden_units: 512
+      num_layers: 2
+      vis_encode_type: simple
+    reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 1.0
+    keep_checkpoints: 5
+    max_steps: 5000000
+    time_horizon: 64
+    summary_freq: 10000
+    
+    self_play:
+      save_steps: 20000
+      team_change: 100000
+      swap_steps: 10000
+      window: 10
+      play_against_latest_model_ratio: 0.5
+      initial_elo: 1200.0
+
+environment_parameters:
+  spawn_area_frac:
+    curriculum:
+      - name: FullArena
+        completion_criteria:
+          measure: progress
+          behavior: BattleBot
+          signal_smoothing: true
+          min_lesson_length: 10
+          threshold: 1.0
+        value: 1.0
+
+  enable_obstacles:
+    curriculum:
+      - name: Obstacles
+        completion_criteria:
+          measure: progress
+          behavior: BattleBot
+          signal_smoothing: true
+          min_lesson_length: 10
+          threshold: 1.0
+        value: 1.0
+
+  enable_wind:
+    curriculum:
+      - name: Windy
+        completion_criteria:
+          measure: progress
+          behavior: BattleBot
+          signal_smoothing: true
+          min_lesson_length: 10
+          threshold: 1.0
+        value: 1.0
+
+  max_wind_force:
+    curriculum:
+      - name: ResumingWind
+        completion_criteria:
+          measure: progress
+          behavior: BattleBot
+          signal_smoothing: true
+          min_lesson_length: 50
+          threshold: 0.02
+        value: 40.0
+      - name: MediumWind
+        completion_criteria:
+          measure: progress
+          behavior: BattleBot
+          signal_smoothing: true
+          min_lesson_length: 50
+          threshold: 0.04
+        value: 130.0
+      - name: HighWind
+        completion_criteria:
+          measure: progress
+          behavior: BattleBot
+          signal_smoothing: true
+          min_lesson_length: 50
+          threshold: 0.06
+        value: 260.0
+      - name: ExtremeWind
+        completion_criteria:
+          measure: progress
+          behavior: BattleBot
+          signal_smoothing: true
+          min_lesson_length: 50
+          threshold: 1.0
+        value: 400.0
+
+torch_settings:
+  device: cpu
