@@ -2,8 +2,7 @@
 
 ## 🎮 Project Results
 
-<video src="repo_description/demo_video.mp4" controls autoplay loop muted width="100%">
-</video>
+[Demo Video](https://github.com/user-attachments/assets/465c6651-6bd2-4a7c-a395-b5ccfd9b65cd)
 
 - Presentation Slides: available [here](repo_description/presentation_slides.pdf)
 - Report in Article Style: available [here](repo_description/report.pdf)
@@ -24,7 +23,7 @@ The agents are trained using **POCA (Posthumous Credit Assignment)**, utilizing 
     * **Balloons (Health/Score):** Agents start with 3 balloons. Losing all balloons does not eliminate the agent. Reaching a max amount of 5 balloons prevents an agent from collecting more.
     * **Boost:** A temporary (2s) speed boost ability (5s cooldown).
 * **The Arena:**
-    * **Battle Royale Wind:** A centripetal force pushes agents towards the center as the match progresses, shrinking the playable area, and promoting .
+    * **Battle Royale Wind:** A centripetal force pushes agents towards the center as the match progresses, shrinking the playable area, and promoting combat between agents.
     * **Restocking Zones:** Two central spawners periodically generate Health Balloons.
     * **Obstacles:** Asymmetric walls that require complex navigation (enabled in later training stages). The walls and restocking zones are always fixed.
     * **Teams:** Agents begin each match with a random position and orientation. The game supports variable team sizes without retraining. It requires training if the total number of teams changes since it affects the size of the observation space of agents. 
