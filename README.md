@@ -20,12 +20,13 @@ The agents are trained using **POCA (Posthumous Credit Assignment)**, utilizing 
 * **Agents:** Differential drive robots equipped with:
     * **Sensors:** Ray Perception Sensors (Simulated Lidar) for detecting walls, enemies, and items.
     * **Spike (Offense):** Used to pop enemy balloons on contact.
-    * **Balloons (Health/Score):** Agents start with 3 balloons (Max 5). Losing all balloons does not eliminate the agent, but prevents them from collecting more until they pick one up.
-    * **Boost:** A temporary speed boost ability (5s cooldown).
+    * **Balloons (Health/Score):** Agents start with 3 balloons. Losing all balloons does not eliminate the agent. Reaching a max amount of 5 balloons prevents an agent from collecting more.
+    * **Boost:** A temporary (2s) speed boost ability (5s cooldown).
 * **The Arena:**
-    * **Battle Royale Wind:** A centripetal force pushes agents towards the center as the match progresses, shrinking the playable area.
+    * **Battle Royale Wind:** A centripetal force pushes agents towards the center as the match progresses, shrinking the playable area, and promoting .
     * **Restocking Zones:** Two central spawners periodically generate Health Balloons.
-    * **Obstacles:** Asymmetric walls that require complex navigation (enabled in later training stages).
+    * **Obstacles:** Asymmetric walls that require complex navigation (enabled in later training stages). The walls and restocking zones are always fixed.
+    * **Teams:** Agents begin each match with a random position and orientation. The game supports variable team sizes without retraining. It requires training if the total number of teams changes since it affects the size of the observation space of agents. 
 
 ---
 
