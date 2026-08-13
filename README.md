@@ -2,7 +2,8 @@
 
 ## 🎮 Project Results
 
-[Demo Video](https://github.com/user-attachments/assets/465c6651-6bd2-4a7c-a395-b5ccfd9b65cd)
+<video src="repo_description/demo_video.mp4" controls autoplay loop muted width="100%">
+</video>
 
 - Presentation Slides: available [here](repo_description/presentation_slides.pdf)
 - Report in Article Style: available [here](repo_description/report.pdf)
