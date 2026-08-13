@@ -1,15 +1,12 @@
 # 🤖 MARL Balloon-Popping Robot Competition
-## Faculty of Engineering, University of Porto (FEUP)
-### Intelligent Robotics - Final Project
 
-## 👥 Authors
-* **David Amorim Cordeiro** (up202108820@up.pt)
-* **Ema Maria Monteiro Martins** (up202402794@up.pt)
-* **Isabel Maria Couto da Silva** (up201904925@up.pt)
-* **Pedro Miguel Meruge Ferreira** (up202409828@up.pt)
+## 🎮 Project Results
 
-> **Source Repository:** [https://github.com/davehubber/RI-Final-Project](https://github.com/davehubber/RI-Final-Project)
-> *Note: This repository is private. Access has been granted to `asousa@fe.up.pt` as per submission guidelines.*
+<video src="repo_description/demo_video.mp4" controls autoplay loop muted width="100%">
+</video>
+
+- Presentation Slides: available [here](repo_description/presentation_slides.pdf)
+- Report in Article Style: available [here](repo_description/report.pdf)
 
 ---
 
@@ -132,4 +129,12 @@ To watch the trained agents play:
 
 ---
 
-© 2025 FEUP - Faculty of Engineering, University of Porto
+## 👥 Authors
+* **David Amorim Cordeiro** (up202108820@up.pt)
+* **Ema Maria Monteiro Martins** (up202402794@up.pt)
+* **Isabel Maria Couto da Silva** (up201904925@up.pt)
+* **Pedro Miguel Meruge Ferreira** (up202409828@up.pt)
+
+> Forked from [https://github.com/davehubber/RI-Final-Project](https://github.com/davehubber/RI-Final-Project)
+
+Intelligent Robotics Final Project - Faculty of Engineering, University of Porto 2025/2026 
